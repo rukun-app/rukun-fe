@@ -1,0 +1,1560 @@
+# Rukun --- Frontend Plan (Draft 1)
+
+> **Status:** Final implementation plan\
+> **Frontend baseline:** Vue 3 + Vite + TypeScript\
+> **Backend contract:** Rukun Backend / Core R melalui OpenAPI 3.1\
+> **Target:** SPA/PWA mobile-first, satu codebase untuk warga, pengurus,
+> vendor, dan system admin\
+> **Prinsip:** karena repository frontend masih blank, foundation harus
+> dibangun solid sebelum feature screen dikerjakan.
+
+------------------------------------------------------------------------
+
+## 1. Tujuan Frontend
+
+Frontend Rukun harus melayani beberapa jenis pengguna tanpa membuat
+aplikasi terpisah:
+
+``` text
+Rukun FE
+├── Warga / Household
+├── Pengurus RT/RW
+├── Vendor
+└── System Admin
+```
+
+Satu User dapat mempunyai beberapa assignment/scope sekaligus. UI tidak
+boleh mengasumsikan satu User = satu role.
+
+Contoh:
+
+``` text
+User Reza
+├── Warga → Household H001
+├── Bendahara RT → RT 03
+└── Sekretaris RW → RW 05
+```
+
+User tetap mempunyai satu session authentication. Pergantian pekerjaan
+dilakukan melalui **Context Switching**, bukan login ulang.
+
+------------------------------------------------------------------------
+
+## 2. Locked Technical Direction
+
+### Core stack
+
+``` text
+Vue 3
+Vite
+TypeScript strict
+
+PrimeVue 4 Styled Mode
+Tailwind CSS 4
+
+Vue Router
+Pinia
+TanStack Vue Query
+
+PrimeVue Forms
+Zod
+
+Orval
+Axios
+
+vue-i18n
+vite-plugin-pwa
+
+Vitest
+Playwright
+```
+
+Package manager dikunci ke **pnpm** dengan lockfile dan versi package
+manager yang dipin.
+
+PrimeVue memakai **Styled Mode** dengan **Aura** sebagai preset awal.
+Tailwind digunakan untuk layout, responsive composition, dan styling
+khusus Rukun.
+
+Orval menghasilkan TypeScript client/types dan TanStack Vue Query
+bindings dari OpenAPI 3.1 backend. Transport HTTP menggunakan satu
+custom Axios instance.
+
+### Deployment
+
+Production target:
+
+``` text
+https://rukun.example/
+├── /        → Vue SPA/PWA
+└── /api     → Laravel API
+```
+
+Frontend dan API berada pada origin/domain yang sama melalui reverse
+proxy.
+
+### Language
+
+Bahasa Indonesia menjadi default.
+
+Frontend tetap disiapkan untuk translation key sehingga UI tidak
+menyebarkan hardcoded copy di seluruh component.
+
+------------------------------------------------------------------------
+
+## 3. Frontend Architecture Principles
+
+### 3.1 Backend remains authoritative
+
+Frontend tidak menentukan:
+
+-   permission;
+-   scope;
+-   invoice balance;
+-   payment status;
+-   allocation;
+-   ledger state;
+-   WiFi eligibility;
+-   gallon balance;
+-   accounting state.
+
+Frontend mengirim intent dan menampilkan state dari server.
+
+### 3.2 Server state ≠ client state
+
+``` text
+TanStack Query
+└── server state
+    ├── residents
+    ├── households
+    ├── invoices
+    ├── payment submissions
+    ├── cashbook
+    ├── wifi
+    ├── patrol
+    └── dst.
+
+Pinia
+└── application/client state
+    ├── authenticated user/session helper
+    ├── available contexts
+    ├── active context
+    ├── UI preferences
+    └── small cross-page transient state
+```
+
+Jangan menyalin seluruh API response ke Pinia.
+
+### 3.3 Generated API contract
+
+Frontend tidak membuat type request/response backend secara manual jika
+sudah tersedia di OpenAPI.
+
+Flow:
+
+``` text
+Backend OpenAPI 3.1
+       ↓
+Generate TypeScript client/types
+       ↓
+src/api/generated
+       ↓
+Domain query/mutation layer
+       ↓
+Pages / Features
+```
+
+Generated source tidak diedit manual.
+
+### 3.4 Capability-driven UI
+
+UI tidak menggunakan role name sebagai authorization logic.
+
+Hindari:
+
+``` text
+role === "bendahara-rt"
+```
+
+Gunakan capability dari backend context:
+
+``` text
+can("payments.manual.approve")
+```
+
+Role merupakan grouping permission di backend. FE menggunakan capability
+untuk presentation.
+
+### 3.5 FE guard bukan security boundary
+
+Route guard, hidden button, dan disabled action hanya UX.
+
+Backend tetap wajib melakukan authorization.
+
+------------------------------------------------------------------------
+
+## 4. Context Switching
+
+Context adalah kombinasi pekerjaan/identity presentation dan scope yang
+tersedia bagi User.
+
+Contoh:
+
+``` text
+Warga
+└── Household H001
+
+Bendahara
+└── RT 03
+
+Sekretaris
+└── RW 05
+```
+
+Backend menyediakan available contexts berdasarkan active scoped
+RoleAssignment.
+
+Contoh contract konseptual:
+
+``` json
+{
+  "contexts": [
+    {
+      "id": "household:H001",
+      "type": "household",
+      "label": "Warga",
+      "scope": {
+        "type": "household",
+        "id": "H001"
+      },
+      "capabilities": [
+        "invoices.view-own",
+        "payments.submit",
+        "patrol.view-own"
+      ]
+    },
+    {
+      "id": "rt:03:bendahara",
+      "type": "management",
+      "label": "Bendahara RT 03",
+      "scope": {
+        "type": "rt",
+        "id": "03"
+      },
+      "capabilities": [
+        "billing.view",
+        "payments.manual.approve",
+        "cashbook.view"
+      ]
+    }
+  ]
+}
+```
+
+### Active context
+
+FE menyimpan satu `activeContextId`.
+
+Switch context:
+
+``` text
+Context Switch
+      ↓
+validate against available contexts
+      ↓
+set activeContext
+      ↓
+invalidate context-sensitive queries
+      ↓
+navigate to context home
+      ↓
+reload authorized data
+```
+
+Context ID harus ikut pada request dengan convention yang disepakati
+backend.
+
+Context yang dikirim client tidak pernah memberikan privilege dengan
+sendirinya.
+
+Jika assignment dicabut/expired, backend menolak context dan FE harus
+refresh `/auth/me`, memilih context valid, lalu menampilkan informasi
+yang sesuai.
+
+------------------------------------------------------------------------
+
+## 4.1 HTTP & Context Contract
+
+Target request pipeline:
+
+``` text
+Vue Feature
+    ↓
+Generated Orval Query / Mutation
+    ↓
+TanStack Vue Query
+    ↓
+Custom Axios Instance
+    ├── Authorization
+    ├── X-Rukun-Context
+    ├── X-Request-ID
+    └── Idempotency-Key (jika endpoint membutuhkan)
+    ↓
+Rukun API
+```
+
+Active context dikirim secara eksplisit melalui:
+
+``` http
+X-Rukun-Context: <context-id>
+```
+
+Header context bukan security boundary. Backend tetap memvalidasi
+assignment aktif, permission, scope, dan Policy.
+
+Business feature tidak boleh membaca/menulis token browser secara
+langsung. Gunakan session abstraction (`getToken`, `setToken`, `clear`)
+agar implementasi bearer token Core R saat ini tidak mengikat seluruh
+codebase. Karena deployment direncanakan same-origin, arsitektur tetap
+membuka jalur migrasi ke secure httpOnly cookie/session bila backend
+mendukungnya kelak.
+
+## 5. Application Shells
+
+Tetap satu Vue application, tetapi presentation shell berbeda.
+
+### Resident Shell
+
+Mobile-first dan sederhana.
+
+Primary navigation:
+
+``` text
+Beranda
+Tagihan
+Ronda
+Layanan
+Akun
+```
+
+Home mengutamakan actionable information:
+
+-   outstanding tagihan;
+-   payment submission status;
+-   WiFi status;
+-   gallon quota;
+-   jadwal ronda;
+-   pengumuman;
+-   aktivitas yang memerlukan tindakan.
+
+### Management Shell
+
+Lebih information-dense untuk RT/RW.
+
+Primary areas:
+
+-   Dashboard;
+-   Household/Warga;
+-   Billing;
+-   Payment Verification;
+-   Cashbook;
+-   WiFi;
+-   Patrol;
+-   Activities;
+-   Citizen Services;
+-   Reports.
+
+Menu muncul berdasarkan capability active context.
+
+### Vendor Shell
+
+Workflow singkat:
+
+-   dashboard;
+-   eligible customers;
+-   delivery/claim;
+-   reconciliation/history.
+
+### System Shell
+
+Untuk Core/System administration yang memang tersedia bagi privileged
+user.
+
+Business administration tidak dicampur dengan Core/system
+administration.
+
+------------------------------------------------------------------------
+
+## 6. Proposed Project Structure
+
+Gunakan feature/domain-oriented architecture, bukan folder besar
+`components/` dan `views/` yang akhirnya bercampur.
+
+``` text
+src/
+├── app/
+│   ├── bootstrap/
+│   ├── router/
+│   ├── providers/
+│   ├── layouts/
+│   └── config/
+│
+├── api/
+│   ├── generated/
+│   ├── client/
+│   └── errors/
+│
+├── auth/
+│   ├── queries/
+│   ├── stores/
+│   ├── guards/
+│   └── components/
+│
+├── contexts/
+│   ├── stores/
+│   ├── composables/
+│   └── components/
+│
+├── features/
+│   ├── dashboard/
+│   ├── households/
+│   ├── residents/
+│   ├── announcements/
+│   ├── billing/
+│   ├── payments/
+│   ├── cashbook/
+│   ├── wifi/
+│   ├── gallon/
+│   ├── patrol/
+│   ├── activities/
+│   ├── citizen-services/
+│   ├── marketplace/
+│   └── notifications/
+│
+├── shared/
+│   ├── components/
+│   ├── composables/
+│   ├── directives/
+│   ├── utils/
+│   ├── types/
+│   └── constants/
+│
+├── design-system/
+│   ├── primitives/
+│   ├── patterns/
+│   └── tokens/
+│
+├── i18n/
+├── pwa/
+└── main.ts
+```
+
+### Rules
+
+`shared/` hanya untuk sesuatu yang benar-benar domain-neutral.
+
+Feature tidak boleh mengambil internal implementation feature lain
+secara sembarangan.
+
+Cross-feature business flow dilakukan melalui public feature
+API/composable atau route, bukan deep import.
+
+`api/generated/` dianggap generated code.
+
+------------------------------------------------------------------------
+
+## 7. PrimeVue UI Foundation
+
+Gunakan PrimeVue sebagai component foundation agar project blank dapat
+bergerak cepat tanpa mewarisi arsitektur admin template pihak ketiga.
+
+Komponen utama menggunakan PrimeVue, antara lain:
+
+-   Button/Input/Password/Select/DatePicker;
+-   Dialog/Drawer/Toast/ConfirmDialog;
+-   DataTable/Paginator/Tabs/Menu;
+-   FileUpload;
+-   Badge/Tag/Skeleton;
+-   komponen form yang sesuai.
+
+Buat wrapper Rukun hanya bila memberi semantic application value yang
+stabil, misalnya `MoneyDisplay`, `StatusBadge`, `PageHeader`,
+`EmptyState`, `ErrorState`, `ConfirmAction`, `SensitiveValue`, dan
+`ContextSwitcher`.
+
+Jangan membuat komponen custom yang bersaing dengan primitive PrimeVue
+tanpa kebutuhan nyata.
+
+### Accessibility
+
+Minimum:
+
+-   semantic HTML;
+-   keyboard navigation;
+-   visible focus;
+-   label/form association;
+-   accessible dialog;
+-   sufficient touch target;
+-   status tidak bergantung pada warna saja;
+-   loading/error/success feedback jelas;
+-   destructive action membutuhkan confirmation.
+
+### Resident UX
+
+-   mobile-first;
+-   bahasa Indonesia sederhana;
+-   tombol utama besar;
+-   form pendek;
+-   nominal Rupiah jelas;
+-   status pembayaran tidak ambigu;
+-   satu primary action per flow bila memungkinkan.
+
+## 8. Routing Strategy
+
+Conceptual route:
+
+``` text
+/auth/*
+/app/*
+/manage/*
+/vendor/*
+/system/*
+```
+
+Contoh:
+
+``` text
+/auth/login
+/auth/forgot-password
+/auth/change-initial-password
+
+/app/home
+/app/bills
+/app/payments
+/app/patrol
+/app/services
+/app/marketplace
+/app/account
+
+/manage/dashboard
+/manage/households
+/manage/residents
+/manage/billing
+/manage/payments
+/manage/cashbook
+/manage/wifi
+/manage/patrol
+/manage/activities
+/manage/services
+/manage/reports
+
+/vendor/dashboard
+/vendor/wifi
+/vendor/gallon
+
+/system/*
+```
+
+Route meta dapat menyatakan:
+
+``` text
+requiresAuth
+contextTypes
+requiredCapabilities
+```
+
+Router guard menggunakan metadata untuk UX/navigation, tetapi
+authorization final tetap backend.
+
+------------------------------------------------------------------------
+
+## 9. Authentication UX
+
+### Login
+
+Satu field identifier:
+
+``` text
+Email atau nomor HP
+Password
+```
+
+Request mengikuti backend contract.
+
+### Initial credential
+
+Jika backend menyatakan `must_change_password`:
+
+``` text
+Login
+ ↓
+PASSWORD_CHANGE_REQUIRED
+ ↓
+forced password-change screen
+ ↓
+success
+ ↓
+refresh session
+ ↓
+application
+```
+
+User tidak boleh masuk business screen sebelum requirement selesai.
+
+### Forgot password
+
+MVP menampilkan jalur yang benar-benar tersedia:
+
+-   reset melalui email;
+-   bantuan pengurus;
+-   household-assisted recovery bila backend menyatakan eligible.
+
+FE tidak menentukan eligibility recovery sendiri.
+
+### Session expiration
+
+401 global flow:
+
+1.  hentikan retry yang tidak relevan;
+2.  clear sensitive client cache;
+3.  simpan intended route jika aman;
+4.  arahkan login;
+5.  setelah login, restore route/context jika masih valid.
+
+------------------------------------------------------------------------
+
+## 10. Query & Mutation Architecture
+
+Setiap feature mempunyai query keys yang konsisten.
+
+Contoh konseptual:
+
+``` text
+["households", contextId, filters]
+["invoices", contextId, filters]
+["payment-submissions", contextId, filters]
+```
+
+Context ID harus menjadi bagian query key untuk data scoped.
+
+### Mutation
+
+Mutation tidak mengedit cache secara spekulatif untuk financial state
+yang sensitif kecuali semantics benar-benar aman.
+
+Setelah financial mutation:
+
+``` text
+mutation
+ ↓
+backend success
+ ↓
+invalidate authoritative queries
+ ↓
+refetch
+```
+
+Optimistic UI lebih cocok untuk state ringan seperti read/unread, bukan
+approval pembayaran atau ledger.
+
+------------------------------------------------------------------------
+
+## 11. Error Handling
+
+Frontend mengikuti stable backend `code`, bukan membandingkan message
+string.
+
+Central API error normalizer menghasilkan struktur seperti:
+
+``` text
+code
+message
+fieldErrors
+requestId
+httpStatus
+```
+
+UI:
+
+-   validation error → dekat field;
+-   authorization → forbidden state;
+-   expired context → refresh context;
+-   conflict → actionable conflict message;
+-   rate limit → retry information;
+-   unknown/server error → generic error + `X-Request-ID`.
+
+`X-Request-ID` dapat disalin user untuk bantuan teknis.
+
+------------------------------------------------------------------------
+
+## 12. Idempotency
+
+Untuk action create yang sensitif, FE menghasilkan `Idempotency-Key` per
+user intent.
+
+Contoh:
+
+-   payment checkout;
+-   cash receipt;
+-   payment submission;
+-   import;
+-   other backend endpoints yang mensyaratkan idempotency.
+
+Key tidak digenerate ulang hanya karena browser melakukan retry dari
+intent yang sama.
+
+Double-click submit harus dicegah di UI, tetapi backend idempotency
+tetap menjadi protection utama.
+
+------------------------------------------------------------------------
+
+## 13. Realtime & Synchronization
+
+Realtime bukan dependency business logic.
+
+Flow:
+
+``` text
+Backend durable event
+        │
+        ├── polling /api/events
+        └── Reverb/Echo jika tersedia
+                ↓
+        Event normalization
+                ↓
+        dedupe event ID
+                ↓
+        invalidate/update Query cache
+```
+
+Contoh event:
+
+-   payment submission approved/rejected;
+-   invoice changed;
+-   notification received;
+-   gallon delivery;
+-   announcement published.
+
+Reconnect harus dapat mengejar event yang terlewat melalui durable
+cursor.
+
+------------------------------------------------------------------------
+
+## 14. PWA Strategy
+
+PWA digunakan agar warga dapat memasang Rukun dari browser.
+
+### Cache
+
+Aman untuk cache:
+
+-   app shell;
+-   JS/CSS bundles;
+-   icons;
+-   static public assets.
+
+Sensitive/domain data tidak dibuat offline-first secara default.
+
+Tidak menyimpan NIK/KK atau financial dataset ke persistent browser
+cache tanpa kebutuhan eksplisit.
+
+### Update
+
+Service worker update harus mempunyai UX yang jelas.
+
+Contoh:
+
+``` text
+Versi baru Rukun tersedia.
+[Perbarui]
+```
+
+Jangan reload paksa ketika user sedang mengisi form/payment flow.
+
+------------------------------------------------------------------------
+
+## 15. Security Baseline
+
+Frontend security baseline:
+
+-   CSP ketat;
+-   tidak memasang third-party script tanpa alasan;
+-   tidak menggunakan `v-html` untuk untrusted content;
+-   dependency audit;
+-   no secrets di Vite env/client bundle;
+-   source map production ditentukan sesuai operational need;
+-   redact sensitive telemetry;
+-   clear sensitive query cache saat logout/context invalidation.
+
+Backend plan saat ini menggunakan Sanctum bearer token. Storage strategy
+token harus diputuskan dan diuji pada F0. Karena FE/API direncanakan
+same-domain, evaluasi juga migration path ke secure httpOnly
+cookie/session jika backend contract kelak mendukungnya.
+
+Jangan menyimpan token atau secret di Pinia persisted state secara
+sembarangan.
+
+------------------------------------------------------------------------
+
+## 16. Forms
+
+Gunakan **PrimeVue Forms + Zod** sebagai standar form di seluruh
+aplikasi.
+
+Form layer harus mendukung:
+
+-   schema/client validation untuk UX;
+-   backend validation sebagai authoritative;
+-   field error mapping;
+-   dirty state;
+-   submit state;
+-   duplicate submit protection;
+-   unsaved-change warning pada flow penting;
+-   money normalization;
+-   phone normalization presentation;
+-   file upload state.
+
+Client validation tidak boleh menduplikasi business rules kompleks dari
+backend.
+
+------------------------------------------------------------------------
+
+## 17. Financial UX Rules
+
+### Payment status language
+
+Bedakan dengan tegas:
+
+``` text
+Pengajuan dikirim
+≠
+Pembayaran diterima
+```
+
+Manual transfer:
+
+``` text
+submitted → Menunggu verifikasi
+approved  → Pembayaran terverifikasi
+rejected  → Pengajuan ditolak
+```
+
+Invoice `paid` hanya ditampilkan setelah backend menyatakan state
+tersebut.
+
+### Manual transfer
+
+Flow warga:
+
+``` text
+Invoice
+→ pilih Transfer Bank
+→ lihat rekening + nominal
+→ transfer
+→ upload bukti
+→ submit
+→ Menunggu Verifikasi
+→ Approved/Rejected
+```
+
+Flow management:
+
+``` text
+Pending submissions
+→ detail
+→ evidence
+→ approve/reject
+→ server recalculates financial state
+```
+
+### Cash
+
+Management screen mencatat cash receipt melalui Billing API.
+
+### QRIS
+
+FE:
+
+-   meminta checkout;
+-   menampilkan QRIS/payment instruction dari backend/payment provider;
+-   menunggu verified status;
+-   menggunakan realtime/polling;
+-   tidak menganggap redirect client sebagai bukti payment success.
+
+------------------------------------------------------------------------
+
+## 18. Patrol UX
+
+Warga melihat:
+
+-   jadwal berikutnya;
+-   histori;
+-   status attendance;
+-   action izin bila assignment eligible.
+
+Izin:
+
+``` text
+Assignment
+→ Ajukan izin
+→ alasan
+→ submit
+→ backend menentukan kewajiban sesuai policy
+```
+
+Jika izin menghasilkan biaya, FE menampilkan kewajiban dari Billing.
+
+FE tidak menghitung sendiri biaya izin.
+
+Pengurus berwenang dapat mencatat izin atas nama warga melalui
+Management Shell.
+
+------------------------------------------------------------------------
+
+## 19. Testing Strategy
+
+Frontend tidak dianggap solid hanya karena TypeScript compile.
+
+### Unit tests
+
+Untuk:
+
+-   pure utility;
+-   formatter;
+-   permission/capability presentation helper;
+-   query key factory;
+-   error normalizer;
+-   state transition helper yang memang berada di FE.
+
+### Component tests
+
+Untuk reusable component dan flow penting:
+
+-   form behavior;
+-   loading/error/empty;
+-   capability visibility;
+-   dialog confirmation;
+-   context switcher.
+
+### E2E tests
+
+Minimum critical journeys:
+
+1.  login email;
+2.  login phone;
+3.  forced initial password change;
+4.  context switch warga → pengurus;
+5.  warga melihat invoice;
+6.  warga submit manual transfer;
+7.  bendahara approve;
+8.  warga melihat payment verified;
+9.  cash receipt;
+10. QRIS flow ketika F5 tersedia;
+11. patrol excuse;
+12. unauthorized context/action ditolak.
+
+E2E environment menggunakan staging/test backend yang deterministik atau
+controlled fixtures.
+
+------------------------------------------------------------------------
+
+## 20. Code Quality Gates
+
+Setiap PR minimal menjalankan:
+
+``` text
+install locked dependencies
+typecheck
+lint
+format check
+unit/component tests
+build
+OpenAPI client drift check
+```
+
+Critical phase menambahkan E2E smoke test.
+
+Tidak merge jika generated API client tidak sinkron dengan OpenAPI yang
+disepakati.
+
+### TypeScript
+
+Gunakan strict mode.
+
+Hindari:
+
+-   `any` tanpa alasan;
+-   type assertion berlebihan;
+-   duplicated backend DTO;
+-   string permission tersebar di seluruh component.
+
+Capability constants/helper harus centralized/generated bila
+memungkinkan.
+
+------------------------------------------------------------------------
+
+# Progress Tracker
+
+> Diperbarui: 2026-09-29
+
+| Fase | Nama | Status | Tanggal Selesai |
+|------|------|--------|-----------------|
+| FE-0 | Project Foundation | ✅ Selesai | 2026-09-29 |
+| FE-1 | UI Foundation & Application Shells | 🔜 Berikutnya | — |
+| FE-2 | Authentication + Context + RBAC | ⏳ Belum dimulai | — |
+| FE-3 | Resident + Household + Area | ⏳ Belum dimulai | — |
+| FE-4 | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai | — |
+| FE-5 | WiFi + Gallon | ⏳ Belum dimulai | — |
+| FE-6 | QRIS / Payment Gateway | ⏳ Belum dimulai | — |
+| FE-7 | Announcements + Citizen Services | ⏳ Belum dimulai | — |
+| FE-8 | Patrol + Activities | ⏳ Belum dimulai | — |
+| FE-9 | Marketplace | ⏳ Belum dimulai | — |
+| FE-10 | CCTV | 🚫 Ditunda (HOLD) | — |
+
+------------------------------------------------------------------------
+
+# PHASE FE-0 --- Project Foundation ✅
+
+Fase ini membangun technical skeleton. Jangan mulai business screen.
+
+## Scope
+
+-   pnpm + pinned version + lockfile;
+-   Vue 3/Vite/TypeScript strict;
+-   PrimeVue 4;
+-   Tailwind CSS 4;
+-   Vue Router;
+-   Pinia;
+-   TanStack Vue Query;
+-   PrimeVue Forms + Zod;
+-   Axios;
+-   Orval;
+-   vue-i18n;
+-   Vitest;
+-   Playwright;
+-   vite-plugin-pwa;
+-   ESLint/formatting;
+-   environment/config validation;
+-   bootstrap/providers;
+-   central API error normalization;
+-   OpenAPI generation scripts;
+-   CI. 
+
+## Required scripts
+
+``` text
+pnpm dev
+pnpm build
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm test:e2e
+pnpm api:generate
+```
+
+## Acceptance Gate
+
+-   clean install dari lockfile berhasil;
+-   production build lulus;
+-   TypeScript strict lulus;
+-   lint/format/test lulus;
+-   E2E smoke baseline lulus;
+-   OpenAPI client reproducible;
+-   generated code tidak diedit manual;
+-   CI lulus.
+
+## Implementasi FE-0 (Selesai 2026-09-29)
+
+File yang dibuat / dimodifikasi:
+
+| File | Keterangan |
+|------|------------|
+| `package.json` | Semua deps runtime + dev, scripts, engines, pnpm config |
+| `.npmrc` | `engine-strict=true`, `shamefully-hoist=false` |
+| `vite.config.ts` | Tailwind 4, VitePWA (prompt, app shell), devtools |
+| `vitest.config.ts` | `mergeConfig` dari vite.config, env jsdom |
+| `playwright.config.ts` | Chromium, `webServer: pnpm dev` |
+| `eslint.config.ts` | Flat config — vue / ts / playwright |
+| `.prettierrc` | No semi, single quote, 100 cols |
+| `orval.config.ts` | OpenAPI → TanStack Query, custom axios mutator |
+| `.env.example` | `VITE_API_BASE_URL`, `VITE_APP_ENV` |
+| `.gitignore` | Tambah `src/api/generated/`, playwright artifacts |
+| `.github/workflows/ci.yml` | typecheck → lint → format:check → test → build |
+| `src/App.vue` | `<RouterView />` saja |
+| `src/main.ts` | `bootstrap()` entry |
+| `src/app/bootstrap/index.ts` | createApp factory + semua plugins |
+| `src/app/config/env.ts` | Zod env validation, throw saat startup jika invalid |
+| `src/app/config/env.test.ts` | Smoke test (valid + missing URL) |
+| `src/app/router/index.ts` | Semua placeholder routes, RouteMeta augmentation, global guard |
+| `src/app/providers/query.ts` | TanStack Query client (staleTime 1min, retry 1) |
+| `src/app/layouts/PlaceholderPage.vue` | Placeholder route display |
+| `src/api/client/http.ts` | Axios instance + interceptors Bearer/X-Rukun-Context/X-Request-ID |
+| `src/api/errors/types.ts` | `NormalizedApiError`, `ApiFieldErrors` |
+| `src/api/errors/normalizer.ts` | `normalizeApiError()`, `isApiError()` |
+| `src/api/generated/.gitkeep` | Placeholder untuk output Orval |
+| `src/auth/stores/session.ts` | `getToken/setToken/clear` over localStorage |
+| `src/contexts/stores/context.ts` | Pinia context store, `can()`, `switchContext()` |
+| `src/i18n/index.ts` | vue-i18n Composition API mode |
+| `src/i18n/locales/id.ts` | Locale Bahasa Indonesia |
+| `src/assets/main.css` | `@import "tailwindcss"` |
+| `e2e/smoke.spec.ts` | Playwright: app loads tanpa crash |
+
+Gates yang lulus:
+
+```
+pnpm typecheck   ✓  0 errors
+pnpm build-only  ✓  356 modules, PWA sw generated
+pnpm lint        ✓  0 errors
+pnpm test        ✓  2/2 (env smoke test)
+```
+
+------------------------------------------------------------------------
+
+# PHASE FE-1 --- UI Foundation & Application Shells 🔜
+
+## Scope
+
+-   PrimeVue Styled Mode + Aura;
+-   semantic styling/token Rukun;
+-   ResidentShell;
+-   ManagementShell;
+-   VendorShell;
+-   SystemShell;
+-   responsive navigation;
+-   management sidebar/topbar;
+-   resident bottom navigation;
+-   PageHeader;
+-   EmptyState;
+-   ErrorState;
+-   StatusBadge;
+-   MoneyDisplay;
+-   ConfirmAction;
+-   loading/skeleton convention;
+-   Toast/Dialog/Drawer convention.
+
+## Acceptance Gate
+
+-   resident shell nyaman pada mobile;
+-   management shell usable pada tablet/desktop;
+-   tidak ada layout overflow utama;
+-   keyboard/focus behavior bekerja;
+-   tidak ada duplicate UI primitive tanpa alasan;
+-   accessibility smoke test lulus.
+
+------------------------------------------------------------------------
+
+# PHASE FE-2 --- Authentication + Context + RBAC
+
+## Authentication
+
+-   login email/phone;
+-   logout;
+-   `/auth/me`;
+-   session abstraction;
+-   forced initial password change;
+-   forgot-password entry;
+-   session-expiry flow.
+
+## Context
+
+-   available contexts;
+-   active context;
+-   ContextSwitcher;
+-   `X-Rukun-Context`;
+-   context-aware query keys;
+-   invalid/revoked context recovery.
+
+## RBAC Presentation
+
+-   centralized `can(permission)`;
+-   capability-aware route;
+-   capability-aware navigation;
+-   capability-aware action.
+
+## Acceptance Gate
+
+Test minimal:
+
+``` text
+Warga
+ → Bendahara RT 03
+ → Warga
+```
+
+tanpa login ulang, stale data, atau cross-scope cache leak.
+
+Fake context tidak memberi akses. Revoked assignment dipulihkan dengan
+aman. Forced password change memblok business screen sampai selesai.
+
+------------------------------------------------------------------------
+
+# PHASE FE-3 --- Resident + Household + Area
+
+## Resident
+
+-   home;
+-   household summary;
+-   household members;
+-   profile/account;
+-   notification inbox;
+-   announcements.
+
+## Management
+
+-   RT/RW dashboard foundation;
+-   household list/detail;
+-   resident list/detail;
+-   create/update;
+-   mutation;
+-   import + progress/result;
+-   scoped role assignment;
+-   sensitive data gated display.
+
+## Acceptance Gate
+
+-   RT isolation benar;
+-   RW hanya melihat child scope yang diizinkan;
+-   context switch tidak meninggalkan stale scoped list;
+-   NIK/KK hidden kecuali authorized;
+-   import error dapat dipahami;
+-   loading/error/empty state lengkap.
+
+------------------------------------------------------------------------
+
+# PHASE FE-4 --- Billing + Manual Payment + Cashbook
+
+## Resident
+
+-   outstanding summary;
+-   invoice list/detail;
+-   payment history;
+-   receipt;
+-   manual transfer submission;
+-   proof upload;
+-   pending/approved/rejected state.
+
+UI wajib membedakan:
+
+``` text
+Pengajuan dikirim
+≠
+Pembayaran diterima
+```
+
+## Management
+
+-   billing dashboard;
+-   payment type/tariff;
+-   invoice list/detail;
+-   manual-payment review queue;
+-   proof viewer;
+-   approve/reject;
+-   cash receipt;
+-   cashbook;
+-   expense;
+-   accounting period close;
+-   monthly report.
+
+## Acceptance Gate
+
+-   pending transfer tidak pernah ditampilkan paid;
+-   approved state berasal dari server Receipt/Allocation;
+-   financial mutation tidak memakai unsafe optimistic update;
+-   duplicate submit terlindungi;
+-   Rupiah konsisten;
+-   closed-period error actionable.
+
+------------------------------------------------------------------------
+
+# PHASE FE-5 --- WiFi + Gallon
+
+## Resident
+
+-   WiFi status;
+-   current invoice/payment state;
+-   gallon quota;
+-   claim/delivery history;
+-   confirmation.
+
+## Management
+
+-   WiFi customers/packages;
+-   collection recap;
+-   remittance;
+-   advance;
+-   reconciliation.
+
+## Vendor
+
+-   eligible customer;
+-   delivery;
+-   pending confirmation;
+-   history/reconciliation.
+
+## Acceptance Gate
+
+-   vendor isolation;
+-   quota/eligibility berasal dari server;
+-   confirmation flow jelas;
+-   WiFi pass-through tidak dipresentasikan sebagai RT income.
+
+------------------------------------------------------------------------
+
+# PHASE FE-6 --- QRIS / Payment Gateway
+
+``` text
+Pilih tagihan
+ ↓
+Request checkout
+ ↓
+QRIS
+ ↓
+Pending
+ ↓
+Polling / realtime
+ ↓
+Verified
+ ↓
+Receipt
+```
+
+## Acceptance Gate
+
+-   authoritative amount berasal dari server;
+-   duplicate logical checkout dicegah;
+-   reload dapat memulihkan state;
+-   expired state jelas;
+-   disconnect realtime dapat fallback ke durable sync;
+-   verified payment memicu authoritative invoice refresh.
+
+------------------------------------------------------------------------
+
+# PHASE FE-7 --- Announcements + Citizen Services
+
+## Resident
+
+-   announcement list/detail;
+-   citizen report;
+-   attachments;
+-   administrative request;
+-   status timeline;
+-   notifications.
+
+## Management
+
+-   work queue;
+-   detail/review;
+-   status update;
+-   attachment access;
+-   scoped filtering.
+
+## Acceptance Gate
+
+-   attachment authorization dihormati;
+-   cross-RT data tidak terekspos;
+-   notification deep-link kembali ke context yang tepat.
+
+------------------------------------------------------------------------
+
+# PHASE FE-8 --- Patrol + Activities
+
+## Resident Patrol
+
+-   next assignment;
+-   schedule/history;
+-   submit excuse;
+-   excuse status;
+-   Billing obligation jika berlaku.
+
+## Management Patrol
+
+-   schedule;
+-   team/member assignment;
+-   attendance;
+-   record excuse on behalf;
+-   Billing settlement state.
+
+Patrol tidak memiliki financial truth sendiri.
+
+``` text
+Patrol excuse
+ ↓
+Backend Billing obligation
+ ↓
+Invoice / Receipt / Allocation
+ ↓
+FE menampilkan Billing state
+```
+
+## Activities
+
+-   activity list/detail;
+-   attendance;
+-   contribution reference bila backed by Billing.
+
+## Acceptance Gate
+
+-   resident hanya submit untuk assignment eligible miliknya;
+-   management action mengikuti scope;
+-   fee tidak dihitung authoritative oleh FE;
+-   settlement berasal dari Billing;
+-   repeated UI action tidak menghasilkan duplicate obligation.
+
+------------------------------------------------------------------------
+
+# PHASE FE-9 --- Marketplace
+
+-   feed;
+-   search/filter;
+-   detail;
+-   create/edit own listing;
+-   image upload;
+-   sold/inactive;
+-   moderation bila authorized.
+
+Tidak ada checkout, escrow, atau shipping pada fase ini.
+
+------------------------------------------------------------------------
+
+# PHASE FE-10 --- CCTV --- HOLD / DEFERRED
+
+Tidak diimplementasikan sekarang.
+
+Jangan menambah streaming dependency atau mengunci asumsi
+RTSP/HLS/WebRTC/vendor cloud.
+
+Buka kembali hanya setelah hardware tersedia, backend PoC selesai,
+protocol diketahui, dan API contract tersedia.
+
+CCTV bukan blocker pilot.
+
+------------------------------------------------------------------------
+
+## 21. Development Order
+
+``` text
+FE-0  Project Foundation
+ │
+ ▼
+FE-1  UI Foundation + Application Shells
+ │
+ ▼
+FE-2  Authentication + Context + RBAC
+ │
+ ▼
+FE-3  Resident + Household + Area
+ │
+ ▼
+FE-4  Billing + Manual Payment + Cashbook
+ │
+ ▼
+FE-5  WiFi + Gallon
+ │
+ ▼
+FE-6  QRIS
+ │
+ ▼
+FE-7  Announcements + Citizen Services
+ │
+ ▼
+FE-8  Patrol + Activities
+ │
+ ▼
+FE-9  Marketplace
+
+FE-10 CCTV [HOLD / DEFERRED]
+```
+
+Backend contract readiness tetap dependency. Jangan membuat permanent
+frontend-only business API yang berbeda dari OpenAPI backend.
+
+------------------------------------------------------------------------
+
+## 22. Pilot Boundary
+
+Prioritas pilot:
+
+``` text
+FE-0 Foundation
+FE-1 UI/Shell
+FE-2 Auth/Context/RBAC
+FE-3 Resident/Household
+FE-4 Billing/Manual Payment/Cashbook
+FE-5 WiFi/Gallon
+FE-6 QRIS
+```
+
+FE-7 sampai FE-9 dapat dilanjutkan setelah transactional core stabil.
+
+FE-10 CCTV tetap HOLD.
+
+------------------------------------------------------------------------
+
+## 23. CI / Quality Gates
+
+Setiap pull request minimal menjalankan:
+
+``` text
+pnpm install --frozen-lockfile
+typecheck
+lint
+format check
+unit/component tests
+production build
+OpenAPI generated-client drift check
+```
+
+Critical integration menambahkan Playwright smoke/E2E.
+
+Jangan merge jika generated API stale, TypeScript gagal, test/build
+gagal, atau critical E2E regression ada.
+
+------------------------------------------------------------------------
+
+## 24. Definition of Done
+
+Satu feature belum selesai hanya karena screen sudah terlihat.
+
+Minimum DoD:
+
+-   responsive;
+-   mobile behavior checked;
+-   desktop management checked jika relevan;
+-   generated API contract digunakan;
+-   TypeScript strict;
+-   loading state;
+-   empty state;
+-   error state;
+-   permission/capability state;
+-   scoped context behavior;
+-   validation + backend error mapping;
+-   critical flow tests;
+-   tidak ada sensitive-data leakage;
+-   tidak ada unexpected console error;
+-   production build lulus;
+-   dokumentasi diperbarui.
+
+------------------------------------------------------------------------
+
+## 25. Final Target
+
+Foundation dianggap berhasil bila setiap feature baru mengikuti pola
+yang konsisten:
+
+``` text
+Feature
+├── route
+├── generated API contract
+├── query/mutation
+├── page/components
+├── capability rules
+├── context handling
+├── loading/error/empty states
+├── tests
+└── documentation
+```
+
+Tujuannya bukan sekadar membuat screen pertama cepat, tetapi membuat
+setiap feature Rukun berikutnya semakin cepat dibangun tanpa
+mengorbankan scoped authorization, financial correctness, security, dan
+maintainability.

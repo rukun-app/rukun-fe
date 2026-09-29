@@ -28,12 +28,20 @@ coverage
 
 .eslintcache
 
-# Cypress
-/cypress/videos/
-/cypress/screenshots/
+# Playwright
+/playwright-report/
+/test-results/
+/e2e/artifacts/
 
 # Vitest
 __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Generated API types (from Orval — do not edit manually)
+src/api/generated/
+
+# Env files (keep only .env.example)
+.env.local
+.env.*.local
