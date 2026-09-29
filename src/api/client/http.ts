@@ -33,3 +33,27 @@ http.interceptors.request.use((config) => {
 
   return config
 })
+
+// Unwrap BE envelope: {"success": true, "data": {...}} → response.data = inner data
+http.interceptors.response.use(
+  (response) => {
+    if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+      response.data = response.data.data
+    }
+    return response
+  },
+  async (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      // Skip redirect for the login endpoint itself (avoid redirect loop)
+      const url = error.config?.url ?? ''
+      if (!url.includes('/auth/login')) {
+        session.clear()
+        const { useContextStore } = await import('@/contexts/stores/context')
+        useContextStore().clearContexts()
+        const { router } = await import('@/app/router')
+        router.replace({ name: 'auth.login' })
+      }
+    }
+    return Promise.reject(error)
+  },
+)

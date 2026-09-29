@@ -1000,9 +1000,9 @@ memungkinkan.
 | Fase | Nama | Status | Tanggal Selesai |
 |------|------|--------|-----------------|
 | FE-0 | Project Foundation | ✅ Selesai | 2026-09-29 |
-| FE-1 | UI Foundation & Application Shells | 🔜 Berikutnya | — |
-| FE-2 | Authentication + Context + RBAC | ⏳ Belum dimulai | — |
-| FE-3 | Resident + Household + Area | ⏳ Belum dimulai | — |
+| FE-1 | UI Foundation & Application Shells | ✅ Selesai | 2026-09-29 |
+| FE-2 | Authentication + Context + RBAC | ✅ Selesai | 2026-09-29 |
+| FE-3 | Resident + Household + Area | 🔜 Berikutnya | — |
 | FE-4 | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai | — |
 | FE-5 | WiFi + Gallon | ⏳ Belum dimulai | — |
 | FE-6 | QRIS / Payment Gateway | ⏳ Belum dimulai | — |
@@ -1110,7 +1110,7 @@ pnpm test        ✓  2/2 (env smoke test)
 
 ------------------------------------------------------------------------
 
-# PHASE FE-1 --- UI Foundation & Application Shells 🔜
+# PHASE FE-1 --- UI Foundation & Application Shells ✅
 
 ## Scope
 
@@ -1141,9 +1141,38 @@ pnpm test        ✓  2/2 (env smoke test)
 -   tidak ada duplicate UI primitive tanpa alasan;
 -   accessibility smoke test lulus.
 
+## Implementasi FE-1 (Selesai 2026-09-29)
+
+| File | Keterangan |
+|------|------------|
+| `src/design-system/theme/preset.ts` | RukunPreset — Aura + teal primary + slate surface tokens |
+| `src/app/bootstrap/index.ts` | Diupdate: pakai `primeVueConfig` dari preset |
+| `src/app/layouts/AuthLayout.vue` | Bare centered layout untuk auth screens |
+| `src/app/layouts/ResidentShell.vue` | Mobile-first: sticky header + scrollable main + fixed bottom nav (5 item) |
+| `src/app/layouts/ManagementShell.vue` | Sidebar collapse (56px/224px) + topbar + capability-filtered nav |
+| `src/app/layouts/VendorShell.vue` | Topbar + 4 nav items (Dashboard, Pelanggan, Pengiriman, Riwayat) |
+| `src/app/layouts/SystemShell.vue` | Dark topbar + page title bar + 3 admin nav items |
+| `src/app/router/index.ts` | Diupdate: shell sebagai parent route + `title` meta + scroll behavior |
+| `src/design-system/components/PageHeader.vue` | Title + optional back button + actions slot |
+| `src/design-system/components/EmptyState.vue` | Icon + title + description + action slot |
+| `src/design-system/components/ErrorState.vue` | Alert role + retry button + `@retry` event |
+| `src/design-system/components/StatusBadge.vue` | 9 status (pending/approved/rejected/paid/unpaid/overdue/active/inactive/processing) |
+| `src/design-system/components/MoneyDisplay.vue` | IDR format via `Intl.NumberFormat`, signed, dimZero |
+| `src/design-system/components/ConfirmAction.vue` | Wraps PrimeVue `useConfirm`, severity=danger support |
+| `src/design-system/components/SensitiveValue.vue` | Hidden-by-default + toggle reveal dengan accessible button |
+| `src/design-system/components/AppSkeleton.vue` | `card` / `list` variant via PrimeVue Skeleton |
+| `src/design-system/index.ts` | Barrel export semua design-system components |
+
+Gates yang lulus:
+
+```
+pnpm typecheck   ✓  0 errors
+pnpm build-only  ✓  367 modules, semua shell code-split
+```
+
 ------------------------------------------------------------------------
 
-# PHASE FE-2 --- Authentication + Context + RBAC
+# PHASE FE-2 --- Authentication + Context + RBAC ✅
 
 ## Authentication
 
@@ -1188,7 +1217,36 @@ aman. Forced password change memblok business screen sampai selesai.
 
 ------------------------------------------------------------------------
 
-# PHASE FE-3 --- Resident + Household + Area
+## Implementasi FE-2 (Selesai 2026-09-29)
+
+| File | Keterangan |
+|------|------------|
+| `src/auth/stores/session.ts` | Diperluas: `SessionUser` (id/name/email/phone/mustChangePassword) + `isAuthenticated()` |
+| `src/auth/api/types.ts` | `LoginRequest`, `LoginResponse`, `MeResponse`, `ForgotPasswordRequest`, `ChangePasswordRequest` |
+| `src/auth/api/auth.ts` | `apiLogin()`, `apiLogout()`, `apiFetchMe()`, `apiForgotPassword()`, `apiChangePassword()` |
+| `src/auth/composables/useAuth.ts` | `login()` / `logout()` / `hydrate()` — orchestrasi session + context store + redirect |
+| `src/api/client/http.ts` | Ditambah 401 response interceptor → clear session + redirect login (dynamic import) |
+| `src/auth/pages/LoginPage.vue` | Form email/phone + password, show/hide, field error display, `useAuth().login()` |
+| `src/auth/pages/ForgotPasswordPage.vue` | Identifier input + success state setelah kirim |
+| `src/auth/pages/ChangeInitialPasswordPage.vue` | Forced password change: current + new + confirm, mismatch validation |
+| `src/auth/pages/SelectContextPage.vue` | Pilih konteks dari `ContextSwitcher`, redirect ke shell yang sesuai |
+| `src/auth/components/ContextSwitcher.vue` | List `availableContexts`, switch konteks aktif + emit `switched` |
+| `src/app/router/index.ts` | Guard diperluas: `mustChangePassword` redirect, `contextTypes` check, `select-context` fallback |
+| `src/App.vue` | `onMounted(hydrate)` — hydrate user + contexts dari `/auth/me` setiap load |
+| `src/i18n/locales/id.ts` | Strings auth: identifier, newPassword, confirmPassword, forcedChangeHint, sessionExpired, dll |
+| `src/auth/stores/session.test.ts` | 5 unit tests session store |
+
+Gates yang lulus:
+
+```
+pnpm test        ✓  7/7 tests (2 files)
+pnpm typecheck   ✓  0 errors
+pnpm build-only  ✓  build sukses, semua auth pages code-split
+```
+
+------------------------------------------------------------------------
+
+# PHASE FE-3 --- Resident + Household + Area 🔜
 
 ## Resident
 

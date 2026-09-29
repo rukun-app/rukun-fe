@@ -349,9 +349,9 @@ Lihat [`plan-fe.md`](./plan-fe.md) untuk detail lengkap setiap fase.
 | Fase | Nama | Status |
 |------|------|--------|
 | **FE-0** | Project Foundation | ✅ Selesai |
-| **FE-1** | UI Foundation & Application Shells | 🔜 Berikutnya |
-| **FE-2** | Authentication + Context + RBAC | ⏳ Belum dimulai |
-| **FE-3** | Resident + Household + Area | ⏳ Belum dimulai |
+| **FE-1** | UI Foundation & Application Shells | ✅ Selesai |
+| **FE-2** | Authentication + Context + RBAC | ✅ Selesai |
+| **FE-3** | Resident + Household + Area | 🔜 Berikutnya |
 | **FE-4** | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai |
 | **FE-5** | WiFi + Gallon | ⏳ Belum dimulai |
 | **FE-6** | QRIS / Payment Gateway | ⏳ Belum dimulai |

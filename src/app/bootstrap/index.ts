@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import Aura from '@primevue/themes/aura'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 
@@ -11,6 +10,7 @@ import { i18n } from '@/i18n'
 import { installQuery } from '@/app/providers/query'
 import { setContextIdProvider } from '@/api/client/http'
 import { useContextStore } from '@/contexts/stores/context'
+import { primeVueConfig } from '@/design-system/theme/preset'
 
 import '@/assets/main.css'
 
@@ -29,14 +29,7 @@ export function bootstrap(): void {
 
   installQuery(app)
 
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: '.dark',
-      },
-    },
-  })
+  app.use(PrimeVue, primeVueConfig)
   app.use(ToastService)
   app.use(ConfirmationService)
 
