@@ -91,82 +91,129 @@ async function save(event: FormSubmitEvent) {
 }
 </script>
 <template>
-  <section class="p-4 md:p-6 max-w-2xl space-y-5">
-    <RouterLink to="/manage/households" class="text-primary-700 underline"
-      >Kembali ke daftar KK</RouterLink
+  <section class="page-container">
+    <RouterLink to="/manage/households" class="back-link"
+      ><i class="pi pi-arrow-left" aria-hidden="true" /> Kembali ke daftar KK</RouterLink
     >
-    <h2 class="text-xl font-semibold">
-      {{ editing ? 'Detail Kartu Keluarga' : 'Tambah Kartu Keluarga' }}
-    </h2>
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">DATA KELUARGA</span>
+        <h2>{{ editing ? 'Detail Kartu Keluarga' : 'Tambah Kartu Keluarga' }}</h2>
+        <p>
+          {{
+            editing
+              ? 'Tinjau dan perbarui informasi rumah tangga.'
+              : 'Catat rumah tangga sebagai bagian dari lingkungan Anda.'
+          }}
+        </p>
+      </div>
+    </div>
     <AppSkeleton v-if="editing && query.isPending.value" />
     <ErrorState
       v-else-if="editing && query.isError.value"
       :description="normalizeApiError(query.error.value).message"
       @retry="query.refetch()"
     />
-    <Form
-      v-else
-      v-slot="$form"
-      :key="id + String(query.dataUpdatedAt.value)"
-      :initial-values="initial"
-      :resolver="resolver"
-      class="space-y-4"
-      @submit="save"
-      @input="dirty = true"
-      @change="dirty = true"
-    >
-      <MutationErrors :error="error" />
-      <fieldset :disabled="busy || !context.can('households.manage')" class="space-y-4">
-        <div v-if="!editing" class="grid gap-1">
-          <label for="area">UUID wilayah RT</label><InputText id="area" name="area_id" /><small
-            class="text-red-700"
-            >{{ $form.area_id?.error?.message }}</small
-          >
+    <div v-else class="form-layout">
+      <Form
+        v-slot="$form"
+        :key="id + String(query.dataUpdatedAt.value)"
+        :initial-values="initial"
+        :resolver="resolver"
+        class="form-panel"
+        @submit="save"
+        @input="dirty = true"
+        @change="dirty = true"
+      >
+        <div class="form-panel-heading">
+          <span class="row-icon"><i class="pi pi-home" aria-hidden="true" /></span>
+          <div>
+            <h3>Informasi rumah tangga</h3>
+            <p>Kolom bertanda * wajib diisi.</p>
+          </div>
         </div>
-        <div class="grid gap-1">
-          <label for="address">Alamat</label><InputText id="address" name="address" /><small
-            class="text-red-700"
-            >{{ $form.address?.error?.message }}</small
-          >
+        <MutationErrors :error="error" />
+        <fieldset :disabled="busy || !context.can('households.manage')" class="form-fields">
+          <div v-if="!editing" class="form-field full-width">
+            <label for="area"
+              >UUID wilayah RT <span class="required" aria-hidden="true">*</span></label
+            ><InputText
+              id="area"
+              name="area_id"
+              placeholder="Masukkan ID wilayah RT"
+              :invalid="!!$form.area_id?.invalid"
+            /><small class="text-red-700">{{ $form.area_id?.error?.message }}</small
+            ><small class="field-help">Gunakan ID RT yang tersedia pada halaman Wilayah.</small>
+          </div>
+          <div class="form-field full-width">
+            <label for="address">Alamat <span class="required" aria-hidden="true">*</span></label
+            ><InputText
+              id="address"
+              name="address"
+              placeholder="Contoh: Jalan Melati Raya"
+              :invalid="!!$form.address?.invalid"
+            /><small class="text-red-700">{{ $form.address?.error?.message }}</small>
+          </div>
+          <div class="form-field">
+            <label for="block">Blok</label
+            ><InputText id="block" name="block" placeholder="Contoh: A" />
+          </div>
+          <div class="form-field">
+            <label for="number">Nomor rumah</label
+            ><InputText id="number" name="house_number" placeholder="Contoh: 12" />
+          </div>
+          <div class="form-field">
+            <label for="occupancy">Hunian</label
+            ><Select
+              input-id="occupancy"
+              name="occupancy_status"
+              :options="[
+                { label: 'Dihuni', value: 'occupied' },
+                { label: 'Kosong', value: 'vacant' },
+                { label: 'Disewakan', value: 'rented' },
+                { label: 'Lainnya', value: 'other' },
+              ]"
+              option-label="label"
+              option-value="value"
+            />
+          </div>
+          <div v-if="editing" class="form-field">
+            <label for="status">Status</label
+            ><Select
+              input-id="status"
+              name="status"
+              :options="[
+                { label: 'Aktif', value: 'active' },
+                { label: 'Pindah', value: 'moved' },
+                { label: 'Tidak aktif', value: 'inactive' },
+              ]"
+              option-label="label"
+              option-value="value"
+            />
+          </div>
+        </fieldset>
+        <div v-if="context.can('households.manage')" class="form-actions">
+          <RouterLink to="/manage/households" class="text-xs text-surface-500 mr-2"
+            >Batal</RouterLink
+          ><Button type="submit" label="Simpan KK" icon="pi pi-check" :loading="busy" />
         </div>
-        <div class="grid gap-1">
-          <label for="block">Blok</label><InputText id="block" name="block" />
-        </div>
-        <div class="grid gap-1">
-          <label for="number">Nomor rumah</label><InputText id="number" name="house_number" />
-        </div>
-        <div class="grid gap-1">
-          <label for="occupancy">Hunian</label
-          ><Select
-            input-id="occupancy"
-            name="occupancy_status"
-            :options="[
-              { label: 'Dihuni', value: 'occupied' },
-              { label: 'Kosong', value: 'vacant' },
-              { label: 'Disewakan', value: 'rented' },
-              { label: 'Lainnya', value: 'other' },
-            ]"
-            option-label="label"
-            option-value="value"
-          />
-        </div>
-        <div v-if="editing" class="grid gap-1">
-          <label for="status">Status</label
-          ><Select input-id="status" name="status" :options="['active', 'moved', 'inactive']" />
-        </div>
-        <Button
-          v-if="context.can('households.manage')"
-          type="submit"
-          label="Simpan KK"
-          :loading="busy"
-        />
-      </fieldset>
-    </Form>
-    <RouterLink
-      v-if="editing && context.can('residents.view')"
-      :to="{ path: '/manage/residents', query: { household: id } }"
-      class="inline-block text-primary-700 underline"
-      >Lihat anggota keluarga</RouterLink
-    >
+      </Form>
+      <aside class="form-note">
+        <i class="pi pi-info-circle" aria-hidden="true" />
+        <h3>Rumah untuk setiap keluarga</h3>
+        <p>
+          Pastikan alamat dan wilayah RT sudah sesuai. Data ini menjadi dasar pendataan anggota
+          keluarga.
+        </p>
+        <RouterLink
+          v-if="editing && context.can('residents.view')"
+          :to="{ path: '/manage/residents', query: { household: id } }"
+          >Lihat anggota keluarga
+          <i class="pi pi-arrow-right ml-1" aria-hidden="true" /></RouterLink
+        ><RouterLink v-else-if="context.can('areas.view')" to="/manage/areas"
+          >Lihat daftar wilayah <i class="pi pi-arrow-right ml-1" aria-hidden="true"
+        /></RouterLink>
+      </aside>
+    </div>
   </section>
 </template>

@@ -59,8 +59,8 @@ async function submit() {
 </script>
 
 <template>
-  <div class="w-full max-w-sm mx-auto px-4">
-    <div class="mb-8 text-center">
+  <div class="auth-page">
+    <div class="auth-page-heading">
       <div
         class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900 mb-3"
       >
@@ -72,7 +72,7 @@ async function submit() {
       </p>
     </div>
 
-    <form class="space-y-4" novalidate @submit.prevent="submit">
+    <form class="auth-form" novalidate @submit.prevent="submit">
       <div
         v-if="error"
         role="alert"

@@ -35,36 +35,22 @@ function select(contextId: string) {
 </script>
 
 <template>
-  <ul role="listbox" aria-label="Pilih konteks" class="flex flex-col gap-1 py-1 min-w-[200px]">
-    <li v-if="contexts.length === 0" class="px-4 py-2 text-sm text-surface-400">
-      Tidak ada konteks tersedia
-    </li>
-    <li
-      v-for="ctx in contexts"
-      :key="ctx.id"
-      role="option"
-      :aria-selected="ctx.id === activeId"
-      class="group"
-    >
+  <ul aria-label="Pilihan akses" class="access-options">
+    <li v-if="contexts.length === 0">Tidak ada konteks tersedia</li>
+    <li v-for="ctx in contexts" :key="ctx.id">
       <button
         type="button"
-        class="w-full flex items-center gap-3 px-4 py-2.5 text-left rounded-lg transition-colors hover:bg-surface-100 dark:hover:bg-surface-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 aria-[selected=true]:bg-primary-50 dark:aria-[selected=true]:bg-primary-950 aria-[selected=true]:text-primary-700 dark:aria-[selected=true]:text-primary-300"
+        class="access-option"
+        :class="{ selected: ctx.id === activeId }"
         :aria-current="ctx.id === activeId ? 'true' : undefined"
         @click="select(ctx.id)"
       >
-        <span
-          class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-700 group-[&[aria-selected=true]]:bg-primary-100 dark:group-[&[aria-selected=true]]:bg-primary-900 shrink-0"
-        >
-          <i :class="`pi ${typeIcon[ctx.type] ?? 'pi-user'} text-sm`" />
-        </span>
-        <span class="flex flex-col min-w-0">
-          <span class="text-sm font-medium truncate">{{ ctx.label }}</span>
-          <span class="text-xs text-surface-400">{{ typeLabel[ctx.type] ?? ctx.type }}</span>
-        </span>
-        <i
-          v-if="ctx.id === activeId"
-          class="pi pi-check ml-auto text-primary-600 dark:text-primary-400 text-xs shrink-0"
-        />
+        <span class="access-option-icon"
+          ><i :class="`pi ${typeIcon[ctx.type] ?? 'pi-user'}`" aria-hidden="true" /></span
+        ><span
+          ><strong>{{ ctx.label }}</strong
+          ><small>{{ typeLabel[ctx.type] ?? ctx.type }}</small></span
+        ><i class="pi pi-arrow-right" aria-hidden="true" />
       </button>
     </li>
   </ul>

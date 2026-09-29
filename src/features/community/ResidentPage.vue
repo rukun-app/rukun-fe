@@ -88,83 +88,128 @@ async function save(event: FormSubmitEvent) {
 }
 </script>
 <template>
-  <section class="p-4 md:p-6 max-w-2xl space-y-5">
-    <RouterLink to="/manage/residents" class="text-primary-700 underline"
-      >Kembali ke daftar warga</RouterLink
+  <section class="page-container">
+    <RouterLink to="/manage/residents" class="back-link"
+      ><i class="pi pi-arrow-left" aria-hidden="true" /> Kembali ke daftar warga</RouterLink
     >
-    <h2 class="text-xl font-semibold">{{ editing ? 'Detail Warga' : 'Tambah Warga' }}</h2>
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">DATA WARGA</span>
+        <h2>{{ editing ? 'Detail Warga' : 'Tambah Warga' }}</h2>
+        <p>
+          {{
+            editing
+              ? 'Tinjau dan perbarui informasi warga yang terdaftar.'
+              : 'Kenali setiap warga, mulai dari data yang tepat.'
+          }}
+        </p>
+      </div>
+    </div>
     <AppSkeleton v-if="editing && query.isPending.value" />
     <ErrorState
       v-else-if="editing && query.isError.value"
       :description="normalizeApiError(query.error.value).message"
       @retry="query.refetch()"
     />
-    <Form
-      v-else
-      v-slot="$form"
-      :key="id + String(query.dataUpdatedAt.value)"
-      :initial-values="initial"
-      :resolver="resolver"
-      class="space-y-4"
-      @submit="save"
-      @input="dirty = true"
-      @change="dirty = true"
-    >
-      <MutationErrors :error="error" />
-      <fieldset :disabled="busy || !context.can('residents.manage')" class="space-y-4">
-        <div v-if="!editing" class="grid gap-1">
-          <label for="household">UUID kartu keluarga</label
-          ><InputText id="household" name="household_id" /><small class="text-red-700">{{
-            $form.household_id?.error?.message
-          }}</small>
+    <div v-else class="form-layout">
+      <Form
+        v-slot="$form"
+        :key="id + String(query.dataUpdatedAt.value)"
+        :initial-values="initial"
+        :resolver="resolver"
+        class="form-panel"
+        @submit="save"
+        @input="dirty = true"
+        @change="dirty = true"
+      >
+        <div class="form-panel-heading">
+          <span class="row-icon"><i class="pi pi-user" aria-hidden="true" /></span>
+          <div>
+            <h3>Informasi warga</h3>
+            <p>Kolom bertanda * wajib diisi.</p>
+          </div>
         </div>
-        <div class="grid gap-1">
-          <label for="name">Nama lengkap</label><InputText id="name" name="name" /><small
-            class="text-red-700"
-            >{{ $form.name?.error?.message }}</small
-          >
+        <MutationErrors :error="error" />
+        <fieldset :disabled="busy || !context.can('residents.manage')" class="form-fields">
+          <div v-if="!editing" class="form-field full-width">
+            <label for="household"
+              >UUID kartu keluarga <span class="required" aria-hidden="true">*</span></label
+            ><InputText
+              id="household"
+              name="household_id"
+              placeholder="ID keluarga tempat warga terdaftar"
+              :invalid="!!$form.household_id?.invalid"
+            /><small class="text-red-700">{{ $form.household_id?.error?.message }}</small
+            ><small class="field-help"
+              >Tambahkan warga dari detail KK agar keluarga terisi otomatis.</small
+            >
+          </div>
+          <div class="form-field full-width">
+            <label for="name">Nama lengkap <span class="required" aria-hidden="true">*</span></label
+            ><InputText
+              id="name"
+              name="name"
+              placeholder="Nama lengkap warga"
+              :invalid="!!$form.name?.invalid"
+            /><small class="text-red-700">{{ $form.name?.error?.message }}</small>
+          </div>
+          <div class="form-field">
+            <label for="phone">Nomor HP warga</label
+            ><InputText id="phone" name="phone" type="tel" placeholder="08xxxxxxxxxx" /><small
+              class="field-help"
+              >Nomor kontak warga, bukan perubahan nomor login.</small
+            >
+          </div>
+          <div class="form-field">
+            <label for="birth">Tanggal lahir</label
+            ><InputText id="birth" name="birth_date" type="date" />
+          </div>
+          <div v-if="!editing" class="form-field">
+            <label for="relationship">Hubungan keluarga</label
+            ><Select
+              input-id="relationship"
+              name="relationship"
+              :options="[
+                { label: 'Kepala keluarga', value: 'head' },
+                { label: 'Pasangan', value: 'spouse' },
+                { label: 'Anak', value: 'child' },
+                { label: 'Orang tua', value: 'parent' },
+                { label: 'Lainnya', value: 'other' },
+              ]"
+              option-label="label"
+              option-value="value"
+            />
+          </div>
+          <div v-if="editing" class="form-field">
+            <label for="status">Status</label
+            ><Select
+              input-id="status"
+              name="status"
+              :options="[
+                { label: 'Aktif', value: 'active' },
+                { label: 'Pindah', value: 'moved' },
+                { label: 'Meninggal', value: 'deceased' },
+                { label: 'Tidak aktif', value: 'inactive' },
+              ]"
+              option-label="label"
+              option-value="value"
+            />
+          </div>
+        </fieldset>
+        <div v-if="context.can('residents.manage')" class="form-actions">
+          <RouterLink to="/manage/residents" class="text-xs text-surface-500 mr-2">Batal</RouterLink
+          ><Button type="submit" label="Simpan warga" icon="pi pi-check" :loading="busy" />
         </div>
-        <div class="grid gap-1">
-          <label for="phone">Nomor HP warga</label
-          ><InputText id="phone" name="phone" type="tel" /><small class="text-surface-500"
-            >Mengubah nomor ini tidak mengubah nomor login.</small
-          >
-        </div>
-        <div class="grid gap-1">
-          <label for="birth">Tanggal lahir</label
-          ><InputText id="birth" name="birth_date" type="date" />
-        </div>
-        <div v-if="!editing" class="grid gap-1">
-          <label for="relationship">Hubungan keluarga</label
-          ><Select
-            input-id="relationship"
-            name="relationship"
-            :options="[
-              { label: 'Kepala keluarga', value: 'head' },
-              { label: 'Pasangan', value: 'spouse' },
-              { label: 'Anak', value: 'child' },
-              { label: 'Orang tua', value: 'parent' },
-              { label: 'Lainnya', value: 'other' },
-            ]"
-            option-label="label"
-            option-value="value"
-          />
-        </div>
-        <div v-if="editing" class="grid gap-1">
-          <label for="status">Status</label
-          ><Select
-            input-id="status"
-            name="status"
-            :options="['active', 'moved', 'deceased', 'inactive']"
-          />
-        </div>
-        <Button
-          v-if="context.can('residents.manage')"
-          type="submit"
-          label="Simpan warga"
-          :loading="busy"
-        />
-      </fieldset>
-    </Form>
+      </Form>
+      <aside class="form-note">
+        <i class="pi pi-shield" aria-hidden="true" />
+        <h3>Data warga, tanggung jawab bersama</h3>
+        <p>
+          Isi data sesuai informasi warga. Nomor HP dan tanggal lahir boleh dikosongkan jika belum
+          tersedia.
+        </p>
+        <p class="mt-3">Hubungan keluarga tidak mengubah hak akses akun.</p>
+      </aside>
+    </div>
   </section>
 </template>

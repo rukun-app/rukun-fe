@@ -30,10 +30,14 @@ export const useContextStore = defineStore('context', () => {
   }
 
   function setContexts(contexts: UserContext[]): void {
+    const remembered = sessionStorage.getItem('rukun:context')
     availableContexts.value = contexts
     if (!contexts.some((context) => context.id === activeContextId.value)) {
       queryClient.clear()
-      activeContextId.value = null
+      activeContextId.value = contexts.some((context) => context.id === remembered)
+        ? remembered
+        : null
+      if (!activeContextId.value) sessionStorage.removeItem('rukun:context')
     }
   }
 
@@ -45,10 +49,12 @@ export const useContextStore = defineStore('context', () => {
       queryClient.clear()
     }
     activeContextId.value = contextId
+    sessionStorage.setItem('rukun:context', contextId)
     return true
   }
 
   function clearContexts(): void {
+    sessionStorage.removeItem('rukun:context')
     queryClient.clear()
     availableContexts.value = []
     activeContextId.value = null

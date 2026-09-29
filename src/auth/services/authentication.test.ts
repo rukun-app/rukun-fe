@@ -14,6 +14,7 @@ const user: UserProfile = {
   permissions: [],
 }
 beforeEach(() => {
+  sessionStorage.clear()
   setActivePinia(createPinia())
   queryClient.clear()
 })
@@ -58,5 +59,24 @@ describe('server-authorized presentation', () => {
     queryClient.setQueryData(['private'], 'secret')
     clearAuthentication()
     expect(queryClient.getQueryData(['private'])).toBeUndefined()
+  })
+  it('restores the selected access after reload only when it is still available', () => {
+    sessionStorage.setItem('rukun:context', 'global:management')
+    const store = useContextStore()
+    store.setContexts(profileContexts({ ...user, permissions: ['households.view', 'users.view'] }))
+    expect(store.activeContextId).toBe('global:management')
+    expect(store.can('households.view')).toBe(true)
+  })
+  it('rejects a remembered context that was revoked or forged', () => {
+    sessionStorage.setItem('rukun:context', 'rt:forged')
+    const store = useContextStore()
+    store.setContexts(profileContexts({ ...user, permissions: ['households.view'] }))
+    expect(store.activeContextId).toBeNull()
+    expect(sessionStorage.getItem('rukun:context')).toBeNull()
+  })
+  it('removes the remembered choice on logout', () => {
+    sessionStorage.setItem('rukun:context', 'global:management')
+    clearAuthentication()
+    expect(sessionStorage.getItem('rukun:context')).toBeNull()
   })
 })

@@ -30,36 +30,28 @@ async function onSwitched() {
 </script>
 
 <template>
-  <div class="w-full max-w-sm mx-auto px-4">
-    <div class="mb-6 text-center">
-      <div
-        class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900 mb-3"
-      >
-        <i class="pi pi-users text-primary-600 dark:text-primary-400 text-xl" />
-      </div>
-      <h1 class="text-xl font-bold text-surface-900 dark:text-surface-0">Pilih Akses</h1>
-      <p class="text-surface-500 mt-1 text-sm">
-        Pilih peran yang ingin Anda gunakan untuk sesi ini.
+  <div class="auth-page access-page">
+    <div class="auth-page-heading">
+      <span class="eyebrow">SATU AKUN, BERBAGAI PERAN</span>
+      <h1>Pilih ruang Anda.</h1>
+      <p>Pilih akses untuk melanjutkan.<br />Anda dapat berganti akses kapan saja.</p>
+    </div>
+    <div v-if="!hasContexts" role="status" class="access-empty">
+      <i class="pi pi-lock" aria-hidden="true" />
+      <p>
+        Tidak ada akses yang tersedia untuk akun ini.<br />Hubungi administrator untuk mendapatkan
+        akses.
       </p>
     </div>
-
-    <div
-      v-if="!hasContexts"
-      role="status"
-      class="rounded-lg bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-700 dark:text-amber-300 text-center"
-    >
-      Tidak ada akses yang tersedia untuk akun ini.
-      <br />
-      Hubungi administrator untuk mendapatkan akses.
-    </div>
-
-    <Button label="Keluar" severity="secondary" :loading="loading" class="mt-4" @click="logout" />
-
-    <div
-      v-if="hasContexts"
-      class="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
-    >
-      <ContextSwitcher @switched="onSwitched" />
-    </div>
+    <ContextSwitcher v-else @switched="onSwitched" />
+    <Button
+      label="Keluar"
+      icon="pi pi-sign-out"
+      severity="secondary"
+      text
+      :loading="loading"
+      class="access-logout"
+      @click="logout"
+    />
   </div>
 </template>

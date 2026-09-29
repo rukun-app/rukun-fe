@@ -35,8 +35,8 @@ async function submit() {
 </script>
 
 <template>
-  <div class="w-full max-w-sm mx-auto px-4">
-    <div class="mb-8">
+  <div class="auth-page">
+    <div class="auth-page-heading">
       <RouterLink
         to="/auth/login"
         class="inline-flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
@@ -59,7 +59,7 @@ async function submit() {
       Jika email terdaftar, instruksi reset akan dikirim ke email tersebut.
     </div>
 
-    <form v-else class="space-y-4" novalidate @submit.prevent="submit">
+    <form v-else class="auth-form" novalidate @submit.prevent="submit">
       <div
         v-if="error"
         role="alert"

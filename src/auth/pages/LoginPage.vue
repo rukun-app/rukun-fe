@@ -18,13 +18,14 @@ async function submit() {
 </script>
 
 <template>
-  <div class="w-full max-w-sm mx-auto px-4">
-    <div class="mb-8 text-center">
-      <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0">Rukun</h1>
-      <p class="text-surface-500 mt-1 text-sm">Masuk ke akun Anda</p>
+  <div class="auth-page">
+    <div class="auth-page-heading">
+      <span class="eyebrow">SELAMAT DATANG DI RUKUN</span>
+      <h1>Senang bertemu<br />Anda kembali.</h1>
+      <p>Masuk untuk mengelola dan terhubung<br />dengan lingkungan Anda.</p>
     </div>
 
-    <form class="space-y-4" novalidate @submit.prevent="submit">
+    <form class="auth-form" novalidate @submit.prevent="submit">
       <!-- Global error -->
       <div
         v-if="error && !error.fieldErrors['identifier'] && !error.fieldErrors['password']"
@@ -96,10 +97,16 @@ async function submit() {
       <Button
         type="submit"
         label="Masuk"
+        icon="pi pi-arrow-right"
+        icon-pos="right"
         :loading="loading"
         :disabled="!form.identifier || !form.password"
         class="w-full"
       />
     </form>
+    <p class="auth-help">
+      <i class="pi pi-info-circle" aria-hidden="true" /> Belum punya akun? Hubungi pengurus RT/RW
+      Anda.
+    </p>
   </div>
 </template>

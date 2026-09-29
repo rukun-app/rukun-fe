@@ -9,20 +9,27 @@ import { definePreset } from '@primevue/themes'
 export const RukunPreset = definePreset(Aura, {
   semantic: {
     primary: {
-      50: '{teal.50}',
-      100: '{teal.100}',
-      200: '{teal.200}',
-      300: '{teal.300}',
-      400: '{teal.400}',
-      500: '{teal.500}',
-      600: '{teal.600}',
-      700: '{teal.700}',
-      800: '{teal.800}',
-      900: '{teal.900}',
-      950: '{teal.950}',
+      50: '#f3f7f1',
+      100: '#e8f0e3',
+      200: '#d2e0c9',
+      300: '#b2cba4',
+      400: '#8db281',
+      500: '#699762',
+      600: '#477d4e',
+      700: '#2d6247',
+      800: '#24503b',
+      900: '#214735',
+      950: '#10291f',
     },
+    formField: { borderRadius: '8px', focusBorderColor: '{primary.600}' },
     colorScheme: {
       light: {
+        primary: {
+          color: '{primary.700}',
+          inverseColor: '#ffffff',
+          hoverColor: '{primary.800}',
+          activeColor: '{primary.900}',
+        },
         surface: {
           0: '#ffffff',
           50: '{slate.50}',

@@ -1,105 +1,59 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import Drawer from 'primevue/drawer'
+import ManagementNav from '@/app/components/ManagementNav.vue'
 import SessionActions from '@/auth/components/SessionActions.vue'
-import { useRoute, RouterLink, RouterView } from 'vue-router'
-import { useContextStore } from '@/contexts/stores/context'
-
 const route = useRoute()
-const contextStore = useContextStore()
-
-const sidebarOpen = ref(window.matchMedia('(min-width: 768px)').matches)
-
-interface NavItem {
-  to: string
-  label: string
-  icon: string
-  capability?: string
-}
-
-const allNavItems: NavItem[] = [
-  { to: '/manage/dashboard', label: 'Dashboard', icon: 'pi pi-chart-bar' },
-  {
-    to: '/manage/households',
-    label: 'Kartu Keluarga',
-    icon: 'pi pi-home',
-    capability: 'households.view',
+const mobileOpen = ref(false)
+const menuTrigger = ref<HTMLButtonElement>()
+watch(
+  () => route.fullPath,
+  () => {
+    mobileOpen.value = false
   },
-  { to: '/manage/residents', label: 'Warga', icon: 'pi pi-users', capability: 'residents.view' },
-  { to: '/manage/areas', label: 'Wilayah', icon: 'pi pi-sitemap', capability: 'areas.view' },
-]
-
-const navItems = computed(() =>
-  allNavItems.filter((item) => !item.capability || contextStore.can(item.capability)),
 )
-
-function isActive(path: string) {
-  return route.path.startsWith(path)
-}
-
-const pageTitle = computed(() => String(route.meta['title'] ?? ''))
+const pageTitle = computed(() =>
+  route.name === 'manage.dashboard' ? 'Ringkasan' : String(route.meta.title ?? 'Lingkungan'),
+)
 </script>
-
 <template>
-  <div class="management-shell flex h-svh overflow-hidden bg-surface-100">
-    <!-- Sidebar -->
-    <aside
-      :class="[
-        'flex flex-col bg-surface-0 border-r border-surface-200 transition-all duration-200 overflow-y-auto shrink-0',
-        sidebarOpen ? 'w-56' : 'w-14',
-      ]"
-      aria-label="Sidebar navigasi"
-    >
-      <!-- Logo / brand -->
-      <div class="flex items-center gap-2 px-3 py-4 border-b border-surface-100">
-        <span class="text-primary-600 font-bold text-lg tracking-tight" v-if="sidebarOpen"
-          >Rukun</span
-        >
-        <span class="text-primary-600 font-bold text-lg" v-else>R</span>
-      </div>
-
-      <!-- Nav items -->
-      <nav class="flex-1 py-2" aria-label="Menu manajemen">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="flex items-center gap-3 px-3 py-2 mx-1 rounded-lg text-surface-600 hover:bg-surface-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-          :class="{ 'bg-primary-50 text-primary-700 font-medium': isActive(item.to) }"
-          :aria-current="isActive(item.to) ? 'page' : undefined"
-          :title="!sidebarOpen ? item.label : undefined"
-          :aria-label="item.label"
-        >
-          <i :class="[item.icon, 'text-base shrink-0']" aria-hidden="true" />
-          <span v-if="sidebarOpen" class="text-sm truncate">{{ item.label }}</span>
-        </RouterLink>
-      </nav>
-    </aside>
-
-    <!-- Main area -->
-    <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
-      <!-- Topbar -->
-      <header
-        class="flex items-center gap-3 px-4 py-3 bg-surface-0 border-b border-surface-200 shrink-0"
-      >
+  <div class="management-shell">
+    <a class="skip-link" href="#main-content">Lewati ke konten</a>
+    <aside class="desktop-sidebar" aria-label="Sidebar navigasi"><ManagementNav /></aside>
+    <Drawer
+      v-model:visible="mobileOpen"
+      header="Menu lingkungan"
+      aria-label="Menu lingkungan"
+      @after-hide="menuTrigger?.focus()"
+      :close-button-props="{ 'aria-label': 'Tutup menu navigasi' }"
+      class="mobile-navigation"
+      :pt="{ content: { style: 'padding: 0; display: flex; flex-direction: column;' } }"
+      ><ManagementNav @navigate="mobileOpen = false"
+    /></Drawer>
+    <div class="workspace">
+      <header class="workspace-header">
         <button
           type="button"
-          class="p-2 rounded-lg hover:bg-surface-100 text-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-          :aria-label="sidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'"
-          :aria-expanded="sidebarOpen"
-          @click="sidebarOpen = !sidebarOpen"
+          ref="menuTrigger"
+          class="mobile-menu-button"
+          aria-label="Buka menu navigasi"
+          :aria-expanded="mobileOpen"
+          @click="mobileOpen = true"
         >
-          <i class="pi pi-bars text-base" aria-hidden="true" />
+          <i class="pi pi-bars" aria-hidden="true" />
         </button>
-
-        <h1 class="text-base font-semibold text-surface-900 truncate flex-1">{{ pageTitle }}</h1>
-
+        <div class="workspace-breadcrumb">
+          <span>Lingkungan</span><i class="pi pi-angle-right" aria-hidden="true" />
+          <h1>{{ pageTitle }}</h1>
+        </div>
         <SessionActions />
       </header>
-
-      <!-- Scrollable content -->
-      <main class="flex-1 overflow-y-auto">
-        <RouterView />
-      </main>
+      <main id="main-content" class="workspace-main" tabindex="-1"><RouterView /></main>
+      <footer class="workspace-footer">
+        <span>Dirawat bersama. Tumbuh bersama.</span
+        ><span>Rukun <i class="pi pi-sparkles" aria-hidden="true" /></span>
+      </footer>
     </div>
   </div>
 </template>

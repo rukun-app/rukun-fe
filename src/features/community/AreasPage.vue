@@ -69,12 +69,18 @@ async function save(event: FormSubmitEvent) {
 }
 </script>
 <template>
-  <section class="p-4 md:p-6 space-y-5">
-    <div class="flex items-center justify-between gap-3">
-      <h2 class="text-xl font-semibold">Wilayah RT / RW</h2>
+  <section class="page-container">
+    <div class="page-heading">
+      <div>
+        <span class="eyebrow">DATA LINGKUNGAN</span>
+        <h2>Wilayah RT / RW</h2>
+        <p>Struktur wilayah yang menyatukan keluarga dan warga.</p>
+      </div>
       <Button
         v-if="context.can('areas.manage')"
-        label="Tambah wilayah"
+        :label="creating ? 'Tutup formulir' : 'Tambah wilayah'"
+        :icon="creating ? 'pi pi-times' : 'pi pi-plus'"
+        :severity="creating ? 'secondary' : undefined"
         @click="creating = !creating"
       />
     </div>
@@ -83,40 +89,122 @@ async function save(event: FormSubmitEvent) {
       v-slot="$form"
       :resolver="resolver"
       :initial-values="{ kind: 'rw', name: '', code: '', parent_id: '' }"
-      class="bg-surface-0 p-4 rounded-xl grid gap-3 max-w-xl"
+      class="form-panel mb-6"
       @submit="save"
     >
+      <div class="form-panel-heading">
+        <span class="row-icon"><i class="pi pi-map" aria-hidden="true" /></span>
+        <div>
+          <h3>Wilayah baru</h3>
+          <p>Tambahkan RW atau RT di bawah RW yang sudah terdaftar.</p>
+        </div>
+      </div>
       <MutationErrors :error="error" />
-      <label for="kind">Jenis wilayah</label
-      ><Select input-id="kind" name="kind" :options="['rw', 'rt']" /> <label for="code">Kode</label
-      ><InputText id="code" name="code" /><small class="text-red-700">{{
-        $form.code?.error?.message
-      }}</small>
-      <label for="area-name">Nama wilayah</label><InputText id="area-name" name="name" /><small
-        class="text-red-700"
-        >{{ $form.name?.error?.message }}</small
-      >
-      <label for="parent">UUID RW induk (untuk RT)</label
-      ><InputText id="parent" name="parent_id" /><small class="text-red-700">{{
-        $form.parent_id?.error?.message
-      }}</small>
-      <Button type="submit" label="Simpan wilayah" :loading="busy" />
+      <div class="form-fields">
+        <div class="form-field">
+          <label for="kind">Jenis wilayah <span class="required">*</span></label
+          ><Select
+            input-id="kind"
+            name="kind"
+            :options="[
+              { label: 'Rukun Warga (RW)', value: 'rw' },
+              { label: 'Rukun Tetangga (RT)', value: 'rt' },
+            ]"
+            option-label="label"
+            option-value="value"
+          />
+        </div>
+        <div class="form-field">
+          <label for="code">Kode <span class="required">*</span></label
+          ><InputText id="code" name="code" placeholder="Contoh: 01" /><small
+            class="text-red-700"
+            >{{ $form.code?.error?.message }}</small
+          >
+        </div>
+        <div class="form-field">
+          <label for="area-name">Nama wilayah <span class="required">*</span></label
+          ><InputText id="area-name" name="name" placeholder="Contoh: RW 01 Melati" /><small
+            class="text-red-700"
+            >{{ $form.name?.error?.message }}</small
+          >
+        </div>
+        <div v-if="$form.kind?.value === 'rt'" class="form-field">
+          <label for="parent">UUID RW induk (untuk RT) <span class="required">*</span></label
+          ><InputText
+            id="parent"
+            name="parent_id"
+            placeholder="Salin ID RW dari daftar wilayah"
+          /><small class="text-red-700">{{ $form.parent_id?.error?.message }}</small
+          ><small class="field-help">RT harus berada di bawah satu RW.</small>
+        </div>
+      </div>
+      <div class="form-actions">
+        <Button
+          label="Batal"
+          severity="secondary"
+          text
+          :disabled="busy"
+          @click="creating = false"
+        /><Button type="submit" label="Simpan wilayah" icon="pi pi-check" :loading="busy" />
+      </div>
     </Form>
-    <AppSkeleton v-if="query.isPending.value" variant="list" /><ErrorState
-      v-else-if="query.isError.value"
-      :description="normalizeApiError(query.error.value).message"
-      @retry="query.refetch()"
-    /><EmptyState v-else-if="!result?.data?.length" title="Belum ada wilayah" />
-    <DataTable v-else :value="result.data" striped-rows class="overflow-x-auto"
-      ><Column field="name" header="Nama" /><Column field="kind" header="Jenis" /><Column
-        field="code"
-        header="Kode" /><Column field="public_id" header="UUID wilayah"
-    /></DataTable>
-    <CursorPager
-      :next="result?.next_cursor"
-      :previous="result?.prev_cursor"
-      :busy="query.isFetching.value"
-      @change="cursor = $event"
-    />
+    <div class="data-panel">
+      <div class="data-toolbar">
+        <span class="data-toolbar-label">Daftar wilayah</span
+        ><span class="field-help">Hierarki RW &amp; RT</span>
+      </div>
+      <AppSkeleton v-if="query.isPending.value" variant="list" /><ErrorState
+        v-else-if="query.isError.value"
+        :description="normalizeApiError(query.error.value).message"
+        @retry="query.refetch()"
+      /><EmptyState
+        v-else-if="!result?.data?.length"
+        title="Belum ada wilayah"
+        description="Mulai dengan menambahkan RW, kemudian RT di dalamnya."
+        icon="pi pi-map"
+      />
+      <DataTable
+        v-else
+        :value="result.data"
+        :pt="{ table: { 'aria-label': 'Daftar wilayah', style: 'min-width: 650px' } }"
+      >
+        <Column field="name" header="NAMA WILAYAH"
+          ><template #body="{ data }"
+            ><span class="table-primary"
+              ><span class="row-icon" aria-hidden="true"><i class="pi pi-map-marker" /></span
+              >{{ data.name }}</span
+            ></template
+          ></Column
+        >
+        <Column field="kind" header="JENIS"
+          ><template #body="{ data }"
+            ><span class="status-chip" :class="{ 'is-active': data.kind === 'rw' }">{{
+              data.kind === 'rw' ? 'Rukun Warga' : 'Rukun Tetangga'
+            }}</span></template
+          ></Column
+        >
+        <Column field="code" header="KODE" />
+        <Column field="public_id" header="ID WILAYAH"
+          ><template #body="{ data }"
+            ><code class="text-[10px] text-surface-400 select-all">{{
+              data.public_id
+            }}</code></template
+          ></Column
+        >
+      </DataTable>
+      <div class="data-panel-footer">
+        <p>{{ result?.data?.length ?? 0 }} wilayah di halaman ini</p>
+        <CursorPager
+          :next="result?.next_cursor"
+          :previous="result?.prev_cursor"
+          :busy="query.isFetching.value"
+          @change="cursor = $event"
+        />
+      </div>
+    </div>
+    <p class="field-help mt-4">
+      <i class="pi pi-info-circle mr-1" aria-hidden="true" /> Gunakan ID wilayah RT saat menambahkan
+      kartu keluarga.
+    </p>
   </section>
 </template>
