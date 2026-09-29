@@ -34,7 +34,10 @@ const current = () => config[props.status]
 
 <template>
   <span
-    :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', current().cls]"
+    :class="[
+      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+      current().cls,
+    ]"
   >
     {{ label ?? current().defaultLabel }}
   </span>

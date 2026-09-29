@@ -1,30 +1,24 @@
-import { http } from '@/api/client/http'
-import type {
-  LoginRequest,
-  LoginResponse,
-  MeResponse,
-  ForgotPasswordRequest,
-  ChangePasswordRequest,
-} from './types'
+import {
+  login,
+  logout,
+  currentUser,
+  forgotPassword,
+  changePassword,
+} from '@/api/generated/endpoints'
+import type { LoginRequest, EmailRequest, ChangePasswordRequest } from '@/api/generated/models'
 
-export async function apiLogin(data: LoginRequest): Promise<LoginResponse> {
-  const res = await http.post<LoginResponse>('/auth/login', data)
-  return res.data
+export async function apiLogin(data: LoginRequest) {
+  return (await login(data)).data
 }
-
-export async function apiLogout(): Promise<void> {
-  await http.post('/auth/logout')
+export async function apiLogout() {
+  await logout()
 }
-
-export async function apiFetchMe(): Promise<MeResponse> {
-  const res = await http.get<MeResponse>('/auth/me')
-  return res.data
+export async function apiFetchMe() {
+  return (await currentUser()).data
 }
-
-export async function apiForgotPassword(data: ForgotPasswordRequest): Promise<void> {
-  await http.post('/auth/forgot-password', data)
+export async function apiForgotPassword(data: EmailRequest) {
+  await forgotPassword(data)
 }
-
-export async function apiChangePassword(data: ChangePasswordRequest): Promise<void> {
-  await http.put('/auth/password', data)
+export async function apiChangePassword(data: ChangePasswordRequest) {
+  await changePassword(data)
 }

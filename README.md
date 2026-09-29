@@ -1,373 +1,131 @@
-# Rukun — Frontend
+# Rukun Frontend
 
-Sistem manajemen RT/RW: iuran, pengumuman, keamanan lingkungan, dan layanan warga — dalam satu aplikasi Progressive Web App.
+Vue 3, TypeScript, PrimeVue 4, Tailwind 4, TanStack Vue Query, dan Orval.
 
----
+## Menjalankan lokal
 
-## Daftar Isi
-
-- [Tech Stack](#tech-stack)
-- [Prasyarat](#prasyarat)
-- [Memulai](#memulai)
-- [Environment Variables](#environment-variables)
-- [Scripts](#scripts)
-- [Struktur Proyek](#struktur-proyek)
-- [Arsitektur](#arsitektur)
-- [API Client & Generated Types](#api-client--generated-types)
-- [State Management](#state-management)
-- [Routing & Guard](#routing--guard)
-- [Internasionalisasi (i18n)](#internasionalisasi-i18n)
-- [PWA](#pwa)
-- [Testing](#testing)
-- [CI/CD](#cicd)
-- [Progress Fase](#progress-fase)
-
----
-
-## Tech Stack
-
-| Kategori | Teknologi |
-|----------|-----------|
-| Framework | Vue 3.5 + TypeScript strict |
-| Build | Vite 8 (rolldown) |
-| UI Library | PrimeVue 4 — Styled Mode + Aura preset |
-| Styling | Tailwind CSS 4 (via `@tailwindcss/vite`, tanpa config file) |
-| Server State | TanStack Vue Query v5 |
-| Client State | Pinia v2 |
-| Router | Vue Router v4 |
-| HTTP | Axios — custom instance dengan interceptors |
-| API Types | Orval (OpenAPI → TypeScript + TanStack Query) |
-| Validasi | Zod v3 (env validation + form schema) |
-| i18n | vue-i18n v11 — Composition API mode |
-| PWA | vite-plugin-pwa (Workbox, `registerType: 'prompt'`) |
-| Unit Test | Vitest 3 + jsdom |
-| E2E Test | Playwright |
-| Linting | ESLint 9 flat config + eslint-plugin-vue + eslint-plugin-playwright |
-| Formatting | Prettier |
-| Package Manager | pnpm 12 |
-
----
-
-## Prasyarat
-
-- **Node.js** `^22.18.0` atau `>=24.12.0`
-- **pnpm** `>=12.0.0`
-
-Pasang pnpm jika belum ada:
+Gunakan Node 24 (lihat `.nvmrc`) dan pnpm 12.6.0.
 
 ```sh
-npm install -g pnpm
-# atau
-corepack enable && corepack prepare pnpm@latest --activate
-```
-
----
-
-## Memulai
-
-```sh
-# 1. Clone repo
-git clone <repo-url> rukun-fe
-cd rukun-fe
-
-# 2. Install dependencies (dari lockfile)
-pnpm install
-
-# 3. Salin file env dan isi nilainya
+nvm use
+pnpm install --frozen-lockfile
 cp .env.example .env.local
-
-# 4. Jalankan dev server
 pnpm dev
 ```
 
-Buka `http://localhost:5173` di browser.
+Buka `http://localhost:5173`. Vite meneruskan `/api` ke
+`API_PROXY_TARGET` (default backend lokal `https://rukun.p85.test:8443`).
+`secure: false` hanya digunakan oleh proxy development untuk sertifikat lokal.
+Deployment production membutuhkan reverse proxy HTTPS `/api` ke Laravel.
 
----
+Jika port 5173 sudah dipakai, gunakan URL yang dicetak Vite. Aplikasi yang berjalan
+di port berbeda tidak memakai token localStorage yang sama.
 
-## Environment Variables
-
-Salin `.env.example` ke `.env.local` dan sesuaikan:
-
-```env
-# Base URL backend API (tanpa trailing slash)
-VITE_API_BASE_URL=http://localhost:3000
-
-# App environment: development | staging | production
-VITE_APP_ENV=development
-```
-
-> **Penting:** Semua variabel `VITE_*` akan terbundle ke client. Jangan simpan secret di sini.
-
-Validasi env dijalankan saat startup via Zod (`src/app/config/env.ts`). App akan throw dan tidak mount jika ada variabel yang tidak valid.
-
----
-
-## Scripts
-
-| Script | Perintah | Keterangan |
-|--------|----------|------------|
-| Dev server | `pnpm dev` | Hot-reload di `localhost:5173` |
-| Build produksi | `pnpm build` | TypeCheck + Vite build |
-| Build saja | `pnpm build-only` | Vite build tanpa typecheck |
-| Preview build | `pnpm preview` | Preview hasil dist |
-| Type check | `pnpm typecheck` | `vue-tsc --noEmit` |
-| Lint | `pnpm lint` | ESLint flat config |
-| Format | `pnpm format` | Prettier write |
-| Format check | `pnpm format:check` | Prettier check (untuk CI) |
-| Unit test | `pnpm test` | Vitest run (single pass) |
-| Unit test watch | `pnpm test:watch` | Vitest watch mode |
-| E2E test | `pnpm test:e2e` | Playwright (requires dev server) |
-| Generate API | `pnpm api:generate` | Orval → `src/api/generated/` |
-
----
-
-## Struktur Proyek
-
-```
-rukun-fe/
-├── e2e/                        # Playwright E2E tests
-│   └── smoke.spec.ts
-├── public/
-│   └── favicon.ico
-├── src/
-│   ├── api/
-│   │   ├── client/
-│   │   │   └── http.ts         # Axios instance + interceptors
-│   │   ├── errors/
-│   │   │   ├── types.ts        # NormalizedApiError, ApiFieldErrors
-│   │   │   └── normalizer.ts   # normalizeApiError(), isApiError()
-│   │   └── generated/          # ⚠️ Auto-generated oleh Orval — jangan edit manual
-│   ├── app/
-│   │   ├── bootstrap/
-│   │   │   └── index.ts        # createApp factory + semua plugins
-│   │   ├── config/
-│   │   │   ├── env.ts          # Zod env validation
-│   │   │   └── env.test.ts     # Smoke test env validation
-│   │   ├── layouts/
-│   │   │   └── PlaceholderPage.vue
-│   │   ├── providers/
-│   │   │   └── query.ts        # TanStack Query client
-│   │   └── router/
-│   │       └── index.ts        # Routes + RouteMeta types + global guard
-│   ├── assets/
-│   │   └── main.css            # @import "tailwindcss"
-│   ├── auth/
-│   │   └── stores/
-│   │       └── session.ts      # getToken / setToken / clear
-│   ├── contexts/
-│   │   └── stores/
-│   │       └── context.ts      # Pinia context store + can()
-│   ├── design-system/          # (FE-1) Shared UI primitives
-│   ├── features/               # (FE-2+) Feature modules
-│   ├── i18n/
-│   │   ├── index.ts            # vue-i18n setup
-│   │   └── locales/
-│   │       └── id.ts           # Bahasa Indonesia
-│   ├── pwa/                    # (FE-0) PWA helpers
-│   ├── shared/                 # Shared composables, utils
-│   ├── App.vue                 # Root — hanya <RouterView />
-│   └── main.ts                 # Entry point → bootstrap()
-├── .env.example
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-├── .gitignore
-├── .npmrc
-├── .prettierrc
-├── eslint.config.ts
-├── orval.config.ts
-├── package.json
-├── playwright.config.ts
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-├── vite.config.ts
-└── vitest.config.ts
-```
-
----
-
-## Arsitektur
-
-### Bootstrap Chain
-
-```
-main.ts
-  └── bootstrap()                    src/app/bootstrap/index.ts
-        ├── createApp(App)
-        ├── createPinia()
-        ├── useContextStore()          src/contexts/stores/context.ts
-        ├── setContextIdProvider()     → wires context → Axios header
-        ├── router                     src/app/router/index.ts
-        ├── i18n                       src/i18n/index.ts
-        ├── installQuery(app)          src/app/providers/query.ts
-        ├── PrimeVue + Aura
-        ├── ToastService
-        ├── ConfirmationService
-        └── app.mount('#app')
-```
-
-### HTTP Layer
-
-File: `src/api/client/http.ts`
-
-Axios instance dengan tiga request interceptors:
-
-| Header | Sumber |
-|--------|--------|
-| `Authorization: Bearer <token>` | `session.getToken()` |
-| `X-Rukun-Context: <contextId>` | `contextIdProvider()` (Pinia store) |
-| `X-Request-ID: <uuid>` | `crypto.randomUUID()` |
-
-Response interceptor menangkap error dan melempar `NormalizedApiError`.
-
-### Context & RBAC
-
-- `contextStore.activeContextId` dikirim di setiap request sebagai `X-Rukun-Context`.
-- `can("permission.string")` memeriksa capabilities dari context aktif — digunakan untuk sembunyikan/tampilkan UI element, bukan sebagai security boundary.
-- Security boundary tetap di backend.
-
-### API Error Normalization
-
-Semua error Axios dinormalisasi ke `NormalizedApiError`:
-
-```ts
-{
-  code: string        // e.g. "PAYMENT_ALREADY_PROCESSED"
-  message: string     // pesan user-friendly
-  fieldErrors?: Record<string, string[]>  // validasi field
-  requestId?: string  // X-Request-ID untuk debugging
-  httpStatus: number
-}
-```
-
----
-
-## API Client & Generated Types
-
-Tipe API dan query hooks di-generate otomatis dari OpenAPI spec backend:
+## Validasi
 
 ```sh
-pnpm api:generate
-```
-
-Output: `src/api/generated/` — **jangan edit manual.**
-
-Konfigurasi Orval ada di `orval.config.ts`. Path ke OpenAPI spec backend default ke `../rukun-be/docs/openapi.yaml`.
-
-CI job `api-drift` (currently disabled, enable saat BE ada sebagai submodule) akan gagal jika generated types berbeda dari yang di-commit — mencegah API drift.
-
----
-
-## State Management
-
-| Store | File | Isi |
-|-------|------|-----|
-| Session | `src/auth/stores/session.ts` | Token storage abstraction (`getToken/setToken/clear`) |
-| Context | `src/contexts/stores/context.ts` | Active context, available contexts, `can()`, `switchContext()` |
-
-> Session store sengaja **bukan** Pinia store — cukup object biasa di atas localStorage. Ini memudahkan migrasi ke httpOnly cookie di masa depan tanpa mengubah consumer.
-
----
-
-## Routing & Guard
-
-Semua route ada di `src/app/router/index.ts`. Route meta di-augment dengan:
-
-```ts
-interface RouteMeta {
-  requiresAuth?: boolean
-  contextTypes?: ContextType[]
-  requiredCapabilities?: string[]
-}
-```
-
-Global navigation guard:
-- Redirect ke `/auth/login` jika route `requiresAuth: true` dan tidak ada token.
-- Selebihnya guard kapabilitas dilakukan di dalam masing-masing feature (per-route guard).
-
----
-
-## Internasionalisasi (i18n)
-
-- Bahasa default: **Bahasa Indonesia** (`id`)
-- Mode: Composition API (`legacy: false`)
-- Locale file: `src/i18n/locales/id.ts`
-
-Untuk menambah string baru, tambahkan key di file locale kemudian gunakan `useI18n()` di component.
-
----
-
-## PWA
-
-- `registerType: 'prompt'` — user diminta konfirmasi sebelum update dipasang.
-- Workbox pre-cache: semua `js`, `css`, `html`, `ico`, `png`, `svg`, `woff2`.
-- API calls (`/api/*`) dikecualikan dari service worker.
-- Update prompt akan diimplementasikan di FE-1.
-
----
-
-## Testing
-
-### Unit Tests
-
-```sh
+pnpm api:check
+pnpm typecheck
+pnpm lint
+pnpm format:check
 pnpm test
-```
-
-Vitest + jsdom. File test: `src/**/*.test.ts`.
-
-### E2E Tests
-
-```sh
-# Pastikan dev server sudah jalan, atau Playwright akan menjalankannya otomatis
+pnpm build-only
+pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-Playwright dengan Chromium. Test ada di `e2e/`.
+OpenAPI backend disimpan dalam `openapi/rukun.json`; generated client di
+`src/api/generated` tidak diedit manual. Setelah mengganti snapshot kontrak,
+jalankan `pnpm api:generate` dan commit keduanya. Backend contract tidak boleh
+berisi credential atau token nyata.
 
----
+## Status
 
-## CI/CD
+Perbaikan foundation/auth dan implementasi awal FE-3 tersedia. Context scoped
+RT/RW/Household/Vendor belum diekspos backend. Saat ini menu management/system
+hanya berasal dari permission global yang benar-benar dikirim server.
 
-`.github/workflows/ci.yml` menjalankan:
+Detail temuan, batas pengujian, dan gate tiap fase ada di
+[Audit frontend](docs/frontend-audit.md) serta [Rencana frontend](plan-fe.md).
 
-1. `pnpm typecheck`
-2. `pnpm lint`
-3. `pnpm format:check`
-4. `pnpm test`
-5. `pnpm build-only`
+## Batas pengerjaan per fase
 
-Job `api-drift` (disabled) akan aktif saat BE repo tersedia sebagai submodule — memeriksa apakah generated types sudah sinkron dengan OpenAPI spec terbaru.
+Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
+Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
+bersama implementasi serta hasil unit test. **Penyerahan saat ini: perbaikan
+fondasi/login dan FE-3 tahap 1; FE-3 belum selesai seluruhnya. FE-4 belum dimulai.**
 
----
+## Checklist pengujian manual saat ini
 
-## Progress Fase
+Gunakan akun development yang mempunyai permission global terkait. Akun scoped
+RT/RW/Household/Vendor belum dapat diuji penuh karena backend belum mengekspor
+context dan capability efektif. Tidak ada akun atau password baru yang dibuat
+oleh pekerjaan frontend ini.
 
-Lihat [`plan-fe.md`](./plan-fe.md) untuk detail lengkap setiap fase.
+1. Buka `http://localhost:5173`; form login harus tampil tanpa redirect berulang.
+2. Login dengan email atau nomor HP. Jika akun wajib mengganti password, halaman
+   ganti password harus muncul sebelum halaman bisnis.
+3. Jika tersedia lebih dari satu pilihan akses, pilih **Pengelolaan lingkungan**.
+4. Buka **Wilayah** (`/manage/areas`): lihat daftar dan buat RW/RT jika berwenang.
+   Untuk RT, masukkan UUID RW induk yang ditampilkan di daftar.
+5. Buka **Kartu Keluarga** (`/manage/households`): tambah KK memakai UUID RT;
+   buka detail, ubah alamat/blok/nomor/hunian, dan simpan. UUID masih dimasukkan
+   manual pada tahap awal ini.
+6. Dari detail KK, pilih **Lihat anggota keluarga**, lalu **Tambah warga**.
+   Nama wajib diisi; nomor HP/tanggal lahir opsional. Coba ubah data warga dan
+   pastikan perubahan tersimpan setelah reload.
+7. Coba filter UUID RT, halaman berikut/sebelumnya, input kosong, dan respons
+   validasi dari backend. Error harus tampil; NIK/KK tidak diambil otomatis.
+8. Coba akun hanya-baca: tombol tambah/simpan harus dibatasi; direct URL tambah
+   harus menampilkan halaman akses tidak tersedia.
+9. Coba **Keluar**, buka kembali URL protected, dan tes tampilan di layar ponsel.
+10. Pada halaman lupa password, uji email. Pemulihan lewat SMS tidak tersedia;
+    akun yang hanya memakai nomor HP diarahkan menghubungi pengurus.
 
-| Fase | Nama | Status |
-|------|------|--------|
-| **FE-0** | Project Foundation | ✅ Selesai |
-| **FE-1** | UI Foundation & Application Shells | ✅ Selesai |
-| **FE-2** | Authentication + Context + RBAC | ✅ Selesai |
-| **FE-3** | Resident + Household + Area | 🔜 Berikutnya |
-| **FE-4** | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai |
-| **FE-5** | WiFi + Gallon | ⏳ Belum dimulai |
-| **FE-6** | QRIS / Payment Gateway | ⏳ Belum dimulai |
-| **FE-7** | Announcements + Citizen Services | ⏳ Belum dimulai |
-| **FE-8** | Patrol + Activities | ⏳ Belum dimulai |
-| **FE-9** | Marketplace | ⏳ Belum dimulai |
-| **FE-10** | CCTV | 🚫 Ditunda |
+Yang **belum tersedia** pada tahap FE-3 ini: dashboard warga, profil/inbox,
+mutasi keanggotaan, import/export UI, pengelolaan scoped assignment,
+reveal/edit NIK/KK, serta edit/hapus wilayah. Menu finansial/layanan belum
+ditampilkan sebagai fitur siap pakai.
 
----
+Tes browser memakai fixture API, sehingga tidak menulis data ke database nyata.
+Pengujian manual CRUD di atas memang menulis data development.
 
-## IDE Setup
+## Hasil verifikasi — 30 September 2026
 
-- **VS Code** + ekstensi [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (nonaktifkan Vetur jika ada)
-- Pastikan TypeScript language service menggunakan versi TypeScript dari `node_modules` (Workspace version), bukan bawaan VS Code
+| Pemeriksaan                                 | Hasil             |
+| ------------------------------------------- | ----------------- |
+| Install dari lockfile                       | Lulus             |
+| Unit test (Vitest 4, 6 file)                | **20/20 lulus**   |
+| Browser E2E (Chromium)                      | **15/15 lulus**   |
+| TypeScript source Vue dan konfigurasi Node  | Lulus             |
+| ESLint dan Prettier                         | Lulus             |
+| Production build + service worker           | Lulus             |
+| OpenAPI generated-client drift              | Lulus             |
+| Health backend melalui `localhost:5173/api` | HTTP 200, healthy |
 
-### Browser DevTools
+Unit test mencakup session, environment, permission presentation, pembersihan
+cache saat logout/context berubah, error normalization, transport generated API,
+dan idempotency retry. E2E mencakup login email/HP, redirect, forced password
+change, sesi kedaluwarsa, outage/retry, reset email, akses terbatas, CRUD KK,
+cursor pagination, validasi server, dan layout mobile.
 
-- Chrome/Edge: [Vue DevTools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) + aktifkan Custom Object Formatters
-- Firefox: [Vue DevTools for Firefox](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
+E2E memakai fixture kontrak, **belum merupakan validasi login/CRUD dengan akun
+nyata atau multi-scope backend**. CI remote dan uji manual pengguna masih pending.
+
+## Peta kode
+
+- `src/app`: bootstrap, router, layout, config, dan provider Query.
+- `src/auth`: API authentication, session abstraction, hydration, dan halaman auth.
+- `src/contexts`: presentation context dan capability helper; backend tetap
+  menjadi security boundary.
+- `src/api/generated`: client/types dari OpenAPI; mutator Axios menjaga response
+  envelope backend, mengirim bearer token dan request ID, serta membatasi timeout.
+- `src/features/community`: FE-3 tahap 1 dan query dengan key context.
+- `src/design-system`: komponen reusable di atas PrimeVue/Aura.
+- `src/i18n`: locale Indonesia; migrasi seluruh copy halaman ke translation key
+  masih perlu dilengkapi.
+- `src/pwa`: PWA hanya precache app shell/assets; UI update prompt masih pending.
+
+Server state berada di TanStack Query. Pinia menyimpan context/UI state; token
+melalui session abstraction. Generated hooks dibungkus domain query agar scoped
+cache tidak memakai key global yang sama.

@@ -22,7 +22,9 @@ export function bootstrap(): void {
 
   // Wire context ID into HTTP interceptor after Pinia is ready
   const contextStore = useContextStore()
-  setContextIdProvider(() => contextStore.activeContextId)
+  setContextIdProvider(() =>
+    contextStore.activeContext?.scope.type === 'global' ? null : contextStore.activeContextId,
+  )
 
   app.use(router)
   app.use(i18n)

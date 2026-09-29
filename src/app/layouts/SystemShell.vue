@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SessionActions from '@/auth/components/SessionActions.vue'
 import { computed } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
 
@@ -34,6 +35,7 @@ function isActive(path: string) {
           {{ item.label }}
         </RouterLink>
       </nav>
+      <SessionActions />
     </header>
 
     <!-- Page title bar -->

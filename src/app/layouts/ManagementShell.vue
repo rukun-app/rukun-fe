@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import SessionActions from '@/auth/components/SessionActions.vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
 import { useContextStore } from '@/contexts/stores/context'
 
 const route = useRoute()
 const contextStore = useContextStore()
 
-const sidebarOpen = ref(true)
+const sidebarOpen = ref(window.matchMedia('(min-width: 768px)').matches)
 
 interface NavItem {
   to: string
@@ -17,14 +18,14 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { to: '/manage/dashboard', label: 'Dashboard', icon: 'pi pi-chart-bar' },
-  { to: '/manage/households', label: 'Warga', icon: 'pi pi-users' },
-  { to: '/manage/billing', label: 'Tagihan', icon: 'pi pi-file-invoice' },
-  { to: '/manage/payments', label: 'Verifikasi', icon: 'pi pi-check-circle', capability: 'payment.verify' },
-  { to: '/manage/cashbook', label: 'Kas', icon: 'pi pi-wallet', capability: 'cashbook.read' },
-  { to: '/manage/wifi', label: 'WiFi', icon: 'pi pi-wifi', capability: 'wifi.manage' },
-  { to: '/manage/patrol', label: 'Ronda', icon: 'pi pi-shield' },
-  { to: '/manage/services', label: 'Layanan', icon: 'pi pi-inbox' },
-  { to: '/manage/reports', label: 'Laporan', icon: 'pi pi-book', capability: 'report.read' },
+  {
+    to: '/manage/households',
+    label: 'Kartu Keluarga',
+    icon: 'pi pi-home',
+    capability: 'households.view',
+  },
+  { to: '/manage/residents', label: 'Warga', icon: 'pi pi-users', capability: 'residents.view' },
+  { to: '/manage/areas', label: 'Wilayah', icon: 'pi pi-sitemap', capability: 'areas.view' },
 ]
 
 const navItems = computed(() =>
@@ -50,7 +51,9 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
     >
       <!-- Logo / brand -->
       <div class="flex items-center gap-2 px-3 py-4 border-b border-surface-100">
-        <span class="text-primary-600 font-bold text-lg tracking-tight" v-if="sidebarOpen">Rukun</span>
+        <span class="text-primary-600 font-bold text-lg tracking-tight" v-if="sidebarOpen"
+          >Rukun</span
+        >
         <span class="text-primary-600 font-bold text-lg" v-else>R</span>
       </div>
 
@@ -64,6 +67,7 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
           :class="{ 'bg-primary-50 text-primary-700 font-medium': isActive(item.to) }"
           :aria-current="isActive(item.to) ? 'page' : undefined"
           :title="!sidebarOpen ? item.label : undefined"
+          :aria-label="item.label"
         >
           <i :class="[item.icon, 'text-base shrink-0']" aria-hidden="true" />
           <span v-if="sidebarOpen" class="text-sm truncate">{{ item.label }}</span>
@@ -74,7 +78,9 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
     <!-- Main area -->
     <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
       <!-- Topbar -->
-      <header class="flex items-center gap-3 px-4 py-3 bg-surface-0 border-b border-surface-200 shrink-0">
+      <header
+        class="flex items-center gap-3 px-4 py-3 bg-surface-0 border-b border-surface-200 shrink-0"
+      >
         <button
           type="button"
           class="p-2 rounded-lg hover:bg-surface-100 text-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
@@ -87,7 +93,7 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
 
         <h1 class="text-base font-semibold text-surface-900 truncate flex-1">{{ pageTitle }}</h1>
 
-        <slot name="topbar-actions" />
+        <SessionActions />
       </header>
 
       <!-- Scrollable content -->

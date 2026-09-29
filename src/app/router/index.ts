@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { session } from '@/auth/stores/session'
+import { ensureSession, hydrationError } from '@/auth/services/authentication'
 
 // Route meta type augmentation
 declare module 'vue-router' {
@@ -21,8 +22,15 @@ const routes: RouteRecordRaw[] = [
   // Auth — bare layout (no shell)
   {
     path: '/auth',
+    meta: { requiresAuth: false },
     component: () => import('@/app/layouts/AuthLayout.vue'),
     children: [
+      {
+        path: 'session-error',
+        name: 'auth.session-error',
+        component: () => import('@/auth/pages/SessionErrorPage.vue'),
+        meta: { requiresAuth: false },
+      },
       {
         path: 'login',
         name: 'auth.login',
@@ -58,13 +66,43 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: 'home', name: 'app.home', component: Placeholder, meta: { title: 'Beranda' } },
       { path: 'billing', name: 'app.billing', component: Placeholder, meta: { title: 'Tagihan' } },
-      { path: 'billing/:id', name: 'app.billing.detail', component: Placeholder, meta: { title: 'Detail Tagihan' } },
-      { path: 'payments', name: 'app.payments', component: Placeholder, meta: { title: 'Riwayat Pembayaran' } },
-      { path: 'patrol', name: 'app.patrol', component: Placeholder, meta: { title: 'Jadwal Ronda' } },
-      { path: 'services', name: 'app.services', component: Placeholder, meta: { title: 'Layanan' } },
-      { path: 'marketplace', name: 'app.marketplace', component: Placeholder, meta: { title: 'Marketplace' } },
+      {
+        path: 'billing/:id',
+        name: 'app.billing.detail',
+        component: Placeholder,
+        meta: { title: 'Detail Tagihan' },
+      },
+      {
+        path: 'payments',
+        name: 'app.payments',
+        component: Placeholder,
+        meta: { title: 'Riwayat Pembayaran' },
+      },
+      {
+        path: 'patrol',
+        name: 'app.patrol',
+        component: Placeholder,
+        meta: { title: 'Jadwal Ronda' },
+      },
+      {
+        path: 'services',
+        name: 'app.services',
+        component: Placeholder,
+        meta: { title: 'Layanan' },
+      },
+      {
+        path: 'marketplace',
+        name: 'app.marketplace',
+        component: Placeholder,
+        meta: { title: 'Marketplace' },
+      },
       { path: 'account', name: 'app.account', component: Placeholder, meta: { title: 'Akun' } },
-      { path: 'notifications', name: 'app.notifications', component: Placeholder, meta: { title: 'Notifikasi' } },
+      {
+        path: 'notifications',
+        name: 'app.notifications',
+        component: Placeholder,
+        meta: { title: 'Notifikasi' },
+      },
     ],
   },
 
@@ -74,18 +112,87 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/app/layouts/ManagementShell.vue'),
     meta: { requiresAuth: true, contextTypes: ['management'] },
     children: [
-      { path: 'dashboard', name: 'manage.dashboard', component: Placeholder, meta: { title: 'Dashboard' } },
-      { path: 'households', name: 'manage.households', component: Placeholder, meta: { title: 'Data Warga' } },
-      { path: 'households/:id', name: 'manage.households.detail', component: Placeholder, meta: { title: 'Detail KK' } },
-      { path: 'residents', name: 'manage.residents', component: Placeholder, meta: { title: 'Daftar Warga' } },
-      { path: 'billing', name: 'manage.billing', component: Placeholder, meta: { title: 'Tagihan' } },
-      { path: 'payments', name: 'manage.payments', component: Placeholder, meta: { title: 'Verifikasi Pembayaran' } },
+      {
+        path: 'dashboard',
+        name: 'manage.dashboard',
+        component: () => import('@/features/community/DashboardPage.vue'),
+        meta: { title: 'Dashboard' },
+      },
+      {
+        path: 'areas',
+        name: 'manage.areas',
+        component: () => import('@/features/community/AreasPage.vue'),
+        meta: { title: 'Wilayah', requiredCapabilities: ['areas.view'] },
+      },
+      {
+        path: 'households/new',
+        name: 'manage.households.new',
+        component: () => import('@/features/community/HouseholdPage.vue'),
+        meta: { title: 'Tambah KK', requiredCapabilities: ['households.manage'] },
+      },
+      {
+        path: 'residents/new',
+        name: 'manage.residents.new',
+        component: () => import('@/features/community/ResidentPage.vue'),
+        meta: { title: 'Tambah warga', requiredCapabilities: ['residents.manage'] },
+      },
+      {
+        path: 'residents/:id',
+        name: 'manage.residents.detail',
+        component: () => import('@/features/community/ResidentPage.vue'),
+        meta: { title: 'Detail warga', requiredCapabilities: ['residents.view'] },
+      },
+      {
+        path: 'households',
+        name: 'manage.households',
+        component: () => import('@/features/community/HouseholdsPage.vue'),
+        meta: { requiredCapabilities: ['households.view'], title: 'Data Warga' },
+      },
+      {
+        path: 'households/:id',
+        name: 'manage.households.detail',
+        component: () => import('@/features/community/HouseholdPage.vue'),
+        meta: { requiredCapabilities: ['households.view'], title: 'Detail KK' },
+      },
+      {
+        path: 'residents',
+        name: 'manage.residents',
+        component: () => import('@/features/community/ResidentsPage.vue'),
+        meta: { requiredCapabilities: ['residents.view'], title: 'Daftar Warga' },
+      },
+      {
+        path: 'billing',
+        name: 'manage.billing',
+        component: Placeholder,
+        meta: { title: 'Tagihan' },
+      },
+      {
+        path: 'payments',
+        name: 'manage.payments',
+        component: Placeholder,
+        meta: { title: 'Verifikasi Pembayaran' },
+      },
       { path: 'cashbook', name: 'manage.cashbook', component: Placeholder, meta: { title: 'Kas' } },
       { path: 'wifi', name: 'manage.wifi', component: Placeholder, meta: { title: 'WiFi' } },
       { path: 'patrol', name: 'manage.patrol', component: Placeholder, meta: { title: 'Ronda' } },
-      { path: 'activities', name: 'manage.activities', component: Placeholder, meta: { title: 'Kegiatan' } },
-      { path: 'services', name: 'manage.services', component: Placeholder, meta: { title: 'Layanan Warga' } },
-      { path: 'reports', name: 'manage.reports', component: Placeholder, meta: { title: 'Laporan' } },
+      {
+        path: 'activities',
+        name: 'manage.activities',
+        component: Placeholder,
+        meta: { title: 'Kegiatan' },
+      },
+      {
+        path: 'services',
+        name: 'manage.services',
+        component: Placeholder,
+        meta: { title: 'Layanan Warga' },
+      },
+      {
+        path: 'reports',
+        name: 'manage.reports',
+        component: Placeholder,
+        meta: { title: 'Laporan' },
+      },
     ],
   },
 
@@ -95,10 +202,30 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/app/layouts/VendorShell.vue'),
     meta: { requiresAuth: true, contextTypes: ['vendor'] },
     children: [
-      { path: 'dashboard', name: 'vendor.dashboard', component: Placeholder, meta: { title: 'Dashboard Vendor' } },
-      { path: 'customers', name: 'vendor.customers', component: Placeholder, meta: { title: 'Pelanggan' } },
-      { path: 'delivery', name: 'vendor.delivery', component: Placeholder, meta: { title: 'Pengiriman' } },
-      { path: 'history', name: 'vendor.history', component: Placeholder, meta: { title: 'Riwayat' } },
+      {
+        path: 'dashboard',
+        name: 'vendor.dashboard',
+        component: Placeholder,
+        meta: { title: 'Dashboard Vendor' },
+      },
+      {
+        path: 'customers',
+        name: 'vendor.customers',
+        component: Placeholder,
+        meta: { title: 'Pelanggan' },
+      },
+      {
+        path: 'delivery',
+        name: 'vendor.delivery',
+        component: Placeholder,
+        meta: { title: 'Pengiriman' },
+      },
+      {
+        path: 'history',
+        name: 'vendor.history',
+        component: Placeholder,
+        meta: { title: 'Riwayat' },
+      },
     ],
   },
 
@@ -108,12 +235,28 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/app/layouts/SystemShell.vue'),
     meta: { requiresAuth: true, contextTypes: ['system'] },
     children: [
-      { path: 'overview', name: 'system.overview', component: Placeholder, meta: { title: 'System Overview' } },
+      {
+        path: 'overview',
+        name: 'system.overview',
+        component: Placeholder,
+        meta: { title: 'System Overview' },
+      },
       { path: 'users', name: 'system.users', component: Placeholder, meta: { title: 'Users' } },
-      { path: 'settings', name: 'system.settings', component: Placeholder, meta: { title: 'Settings' } },
+      {
+        path: 'settings',
+        name: 'system.settings',
+        component: Placeholder,
+        meta: { title: 'Settings' },
+      },
     ],
   },
 
+  {
+    path: '/forbidden',
+    name: 'forbidden',
+    component: () => import('@/app/layouts/ForbiddenPage.vue'),
+    meta: { requiresAuth: true },
+  },
   // Fallback
   { path: '/', redirect: '/auth/login' },
   { path: '/:pathMatch(.*)*', redirect: '/auth/login' },
@@ -132,7 +275,10 @@ export const router = createRouter({
 // Context guard: checks active context type matches route's contextTypes.
 // mustChangePassword guard: forces change-password screen before anything else.
 router.beforeEach(async (to) => {
-  const requiresAuth = to.matched.some((r) => r.meta.requiresAuth !== false)
+  const requiresAuth = to.meta.requiresAuth === true
+  if (to.name === 'auth.session-error') return
+  await ensureSession()
+  if (session.isAuthenticated() && hydrationError.value) return { name: 'auth.session-error' }
   const isAuthenticated = session.isAuthenticated()
 
   // 1. Unauthenticated → login
@@ -150,10 +296,7 @@ router.beforeEach(async (to) => {
   const user = session.getUser()
 
   // 3. mustChangePassword → force change password (unless already heading there)
-  if (
-    user?.mustChangePassword &&
-    to.name !== 'auth.change-initial-password'
-  ) {
+  if (user?.mustChangePassword && to.name !== 'auth.change-initial-password') {
     return { name: 'auth.change-initial-password' }
   }
 
@@ -163,9 +306,7 @@ router.beforeEach(async (to) => {
   }
 
   // 5. contextTypes check
-  const allowedTypes = to.matched
-    .flatMap((r) => r.meta.contextTypes ?? [])
-    .filter(Boolean)
+  const allowedTypes = to.matched.flatMap((r) => r.meta.contextTypes ?? []).filter(Boolean)
 
   if (allowedTypes.length > 0) {
     // Dynamic import to avoid circular dep at module level
@@ -183,12 +324,16 @@ router.beforeEach(async (to) => {
       return { name: 'auth.select-context' }
     }
   }
+  const { useContextStore } = await import('@/contexts/stores/context')
+  if (to.meta.requiredCapabilities?.some((capability) => !useContextStore().can(capability)))
+    return { name: 'forbidden' }
 })
 
 // ─── helper ─────────────────────────────────────────────────────────────────
 async function resolveAuthenticatedHome() {
   const { useContextStore } = await import('@/contexts/stores/context')
   const ctxStore = useContextStore()
+  if (session.getUser()?.mustChangePassword) return { name: 'auth.change-initial-password' }
   const ctxType = ctxStore.activeContext?.type
 
   if (!ctxType) return { name: 'auth.select-context' }

@@ -37,7 +37,8 @@ const id = {
     passwordMismatch: 'Kata sandi tidak cocok',
     passwordTooShort: 'Kata sandi minimal 8 karakter',
     resetSent: 'Instruksi reset kata sandi telah dikirim. Periksa email atau SMS Anda.',
-    forcedChangeHint: 'Akun Anda menggunakan kata sandi sementara. Buat kata sandi baru untuk melanjutkan.',
+    forcedChangeHint:
+      'Akun Anda menggunakan kata sandi sementara. Buat kata sandi baru untuk melanjutkan.',
   },
   payment: {
     pending: 'Menunggu verifikasi',

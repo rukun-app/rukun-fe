@@ -9,63 +9,39 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      VITE_API_BASE_URL: /api
+      VITE_APP_ENV: production
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 12
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
-
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
+      - name: Check API client against snapshot
+        run: pnpm api:check
       - name: Type check
         run: pnpm typecheck
-
       - name: Lint
         run: pnpm lint
-
       - name: Format check
         run: pnpm format:check
-
       - name: Unit tests
         run: pnpm test
-
       - name: Build
         run: pnpm build-only
-        env:
-          VITE_API_BASE_URL: http://localhost:3000
-          VITE_APP_ENV: production
-
-  api-drift:
-    runs-on: ubuntu-latest
-    # Only run when BE openapi spec is available; skip in isolation.
-    # ponytail: enable when rukun-be is a git submodule or fetched via script
-    if: false
-    steps:
-      - uses: actions/checkout@v4
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser regression tests
+        run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          submodules: true
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 12
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate API types
-        run: pnpm api:generate
-
-      - name: Detect drift
-        run: git diff --exit-code src/api/generated/
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/

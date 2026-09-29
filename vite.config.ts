@@ -1,11 +1,20 @@
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  server: {
+    proxy: {
+      '/api': {
+        target: loadEnv(mode, process.cwd(), '').API_PROXY_TARGET || 'https://rukun.p85.test:8443',
+        changeOrigin: true,
+        secure: false, // Local development certificate only; production uses its reverse proxy.
+      },
+    },
+  },
   plugins: [
     vue(),
     tailwindcss(),
@@ -41,4 +50,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-})
+}))

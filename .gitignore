@@ -39,8 +39,7 @@ __screenshots__/
 # Vite
 *.timestamp-*-*.mjs
 
-# Generated API types (from Orval — do not edit manually)
-src/api/generated/
+# Generated API types are committed with their OpenAPI snapshot; do not edit manually.
 
 # Env files (keep only .env.example)
 .env.local

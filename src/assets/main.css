@@ -1,1 +1,21 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import 'tailwindcss-primeui';
+@import 'primeicons/primeicons.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  color: var(--p-surface-900);
+  background: var(--p-surface-50);
+}
+button,
+a,
+input,
+select {
+  touch-action: manipulation;
+}
+:focus-visible {
+  outline: 2px solid var(--p-primary-500);
+  outline-offset: 3px;
+}

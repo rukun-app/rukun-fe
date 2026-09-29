@@ -995,14 +995,20 @@ memungkinkan.
 
 # Progress Tracker
 
+> **Audit aktual 2026-09-30:** status selesai historis di bawah telah dikoreksi
+> berdasarkan pemeriksaan source dan browser. FE-0/FE-1 mendapat perbaikan
+> fondasi, FE-2 belum memenuhi gate context scoped karena backend hanya
+> mengembalikan permission global. FE-3 mulai diimplementasikan sebagian.
+> Detail: [docs/frontend-audit.md](docs/frontend-audit.md).
+
 > Diperbarui: 2026-09-29
 
 | Fase | Nama | Status | Tanggal Selesai |
 |------|------|--------|-----------------|
-| FE-0 | Project Foundation | ✅ Selesai | 2026-09-29 |
-| FE-1 | UI Foundation & Application Shells | ✅ Selesai | 2026-09-29 |
-| FE-2 | Authentication + Context + RBAC | ✅ Selesai | 2026-09-29 |
-| FE-3 | Resident + Household + Area | 🔜 Berikutnya | — |
+| FE-0 | Project Foundation | 🔧 Diperbaiki; verifikasi lokal, CI remote pending | — |
+| FE-1 | UI Foundation & Application Shells | 🔧 Perbaikan komponen, tema, mobile; audit seluruh shell pending | — |
+| FE-2 | Authentication + Context + RBAC | ⚠️ Auth diperbaiki; kontrak context scoped BE belum tersedia | — |
+| FE-3 | Resident + Household + Area | 🚧 Tahap awal pengelolaan KK/warga/wilayah | — |
 | FE-4 | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai | — |
 | FE-5 | WiFi + Gallon | ⏳ Belum dimulai | — |
 | FE-6 | QRIS / Payment Gateway | ⏳ Belum dimulai | — |
@@ -1172,7 +1178,7 @@ pnpm build-only  ✓  367 modules, semua shell code-split
 
 ------------------------------------------------------------------------
 
-# PHASE FE-2 --- Authentication + Context + RBAC ✅
+# PHASE FE-2 --- Authentication + Context + RBAC ⚠️ Gate scoped belum lulus
 
 ## Authentication
 
@@ -1246,7 +1252,37 @@ pnpm build-only  ✓  build sukses, semua auth pages code-split
 
 ------------------------------------------------------------------------
 
-# PHASE FE-3 --- Resident + Household + Area 🔜
+# PHASE FE-3 --- Resident + Household + Area 🚧 Tahap 1
+
+## Batas penyerahan FE-3 tahap 1 (2026-09-30)
+
+Sesuai arahan pengguna, implementasi diserahkan per fase/tahap untuk pengujian
+manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
+
+- [x] Dashboard pengurus dengan menu sesuai permission global aktual.
+- [x] Daftar/detail/tambah/ubah Household.
+- [x] Daftar/detail/tambah/ubah Resident; tautan anggota dari Household.
+- [x] Daftar/tambah RW/RT; UUID wilayah/Household masih diinput manual.
+- [x] Cursor pagination, query key context, cache cleanup, loading/error/empty.
+- [x] PrimeVue Forms + Zod, backend field errors, duplicate-submit protection,
+  idempotency key stabil untuk retry payload yang sama.
+- [x] NIK/KK tidak dimuat melalui list/detail biasa.
+- [ ] Dashboard warga, profil/account dan notification inbox.
+- [ ] Mutasi membership, import/export UI dan progress/result.
+- [ ] Scoped role assignment dan reveal/edit data sensitif.
+- [ ] Edit/hapus wilayah.
+- [ ] Kontrak context scoped backend dan gate isolasi RT/RW/Vendor.
+- [ ] Pengumuman (menunggu modul backend).
+- [ ] Uji manual oleh pengguna terhadap akun/backend development.
+
+FE-3 belum ditandai selesai. FE-4 dan fase berikutnya belum dimulai.
+Verifikasi lokal 2026-09-30: **20/20 unit test (6 file)** dan **15/15 E2E
+Chromium** lulus. TypeScript aplikasi/config, lint, format, production build,
+install frozen lockfile, dan OpenAPI drift check lulus. E2E memakai fixture
+kontrak; login/CRUD akun nyata, multi-scope backend, CI remote, serta testing
+manual pengguna belum diverifikasi. Checklist manual ada di README.
+
+Hasil automated test dan batas integrasi dicatat di README dan audit frontend.
 
 ## Resident
 

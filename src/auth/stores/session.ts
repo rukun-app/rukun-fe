@@ -3,6 +3,8 @@
  * ponytail: migrate to httpOnly cookie by swapping this module when backend supports it.
  */
 
+import { shallowRef } from 'vue'
+
 export interface SessionUser {
   id: string
   name: string
@@ -13,7 +15,7 @@ export interface SessionUser {
 
 const TOKEN_KEY = 'rukun:token'
 
-let _user: SessionUser | null = null
+const _user = shallowRef<SessionUser | null>(null)
 
 export const session = {
   getToken(): string | null {
@@ -25,16 +27,16 @@ export const session = {
   },
 
   getUser(): SessionUser | null {
-    return _user
+    return _user.value
   },
 
   setUser(user: SessionUser): void {
-    _user = user
+    _user.value = user
   },
 
   clear(): void {
     localStorage.removeItem(TOKEN_KEY)
-    _user = null
+    _user.value = null
   },
 
   isAuthenticated(): boolean {

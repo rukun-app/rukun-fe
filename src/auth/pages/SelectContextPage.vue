@@ -4,22 +4,19 @@
  * or navigated to a shell that doesn't match the current active context type.
  */
 import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import Button from 'primevue/button'
+import { useAuth } from '@/auth/composables/useAuth'
+import { useRouter } from 'vue-router'
 import { useContextStore } from '@/contexts/stores/context'
 import ContextSwitcher from '@/auth/components/ContextSwitcher.vue'
 
+const { logout, loading } = useAuth()
 const router = useRouter()
-const route = useRoute()
 const ctxStore = useContextStore()
 
 const hasContexts = computed(() => ctxStore.availableContexts.length > 0)
 
 async function onSwitched() {
-  const redirect = route.query['redirect'] as string | undefined
-  if (redirect && redirect.startsWith('/')) {
-    await router.replace(redirect)
-    return
-  }
   // resolveAuthenticatedHome logic — duplicate-free by delegating to the guard
   const ctxType = ctxStore.activeContext?.type
   const map: Record<string, string> = {
@@ -56,7 +53,12 @@ async function onSwitched() {
       Hubungi administrator untuk mendapatkan akses.
     </div>
 
-    <div v-else class="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden">
+    <Button label="Keluar" severity="secondary" :loading="loading" class="mt-4" @click="logout" />
+
+    <div
+      v-if="hasContexts"
+      class="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden"
+    >
       <ContextSwitcher @switched="onSwitched" />
     </div>
   </div>

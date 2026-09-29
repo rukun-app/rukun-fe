@@ -3,16 +3,17 @@ import { defineConfig } from 'orval'
 export default defineConfig({
   rukun: {
     input: {
-      target: '../rukun-be/docs/openapi.yaml', // ponytail: path to BE openapi; change when BE repo path differs
+      target: './openapi/rukun.json',
     },
     output: {
       target: './src/api/generated/endpoints.ts',
+      tsconfig: './tsconfig.app.json',
       schemas: './src/api/generated/models',
       client: 'vue-query',
       override: {
         mutator: {
-          path: './src/api/client/http.ts',
-          name: 'http',
+          path: './src/api/client/mutator.ts',
+          name: 'apiRequest',
         },
       },
       prettier: true,

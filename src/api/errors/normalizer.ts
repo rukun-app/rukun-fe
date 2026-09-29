@@ -8,7 +8,15 @@ interface BackendErrorBody {
   errors?: Record<string, string | string[]>
 }
 
-export function normalizeApiError(error: AxiosError): NormalizedApiError {
+export function normalizeApiError(error: unknown): NormalizedApiError {
+  if (!axios.isAxiosError(error))
+    return {
+      code: 'UNKNOWN_ERROR',
+      message: 'Terjadi kesalahan. Silakan coba lagi.',
+      fieldErrors: {},
+      requestId: null,
+      httpStatus: 0,
+    }
   const status = error.response?.status ?? 0
   const requestId = (error.response?.headers?.['x-request-id'] as string | undefined) ?? null
   const body = error.response?.data as BackendErrorBody | undefined

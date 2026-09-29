@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiChangePassword } from '@/auth/api/auth'
-import { session } from '@/auth/stores/session'
+import { ensureSession, hydrationError } from '@/auth/services/authentication'
 import { normalizeApiError, isApiError } from '@/api/errors/normalizer'
 import type { NormalizedApiError } from '@/api/errors/types'
 
@@ -22,12 +24,14 @@ const mismatch = computed(
 
 const canSubmit = computed(
   () =>
-    form.value.current_password.length >= 6 &&
+    form.value.current_password.length > 0 &&
     form.value.password.length >= 8 &&
+    form.value.password_confirmation.length > 0 &&
     !mismatch.value,
 )
 
 async function submit() {
+  if (loading.value || !canSubmit.value) return
   loading.value = true
   error.value = null
   try {
@@ -36,14 +40,18 @@ async function submit() {
       password: form.value.password,
       password_confirmation: form.value.password_confirmation,
     })
-    // Update in-memory user flag so router guard clears
-    const user = session.getUser()
-    if (user) session.setUser({ ...user, mustChangePassword: false })
-    await router.replace({ name: 'app.home' })
+    await ensureSession(true)
+    await router.replace(hydrationError.value ? '/auth/session-error' : '/')
   } catch (e) {
     error.value = isApiError(e)
       ? normalizeApiError(e)
-      : { code: 'UNKNOWN_ERROR', message: 'Terjadi kesalahan. Silakan coba lagi.', fieldErrors: {}, requestId: null, httpStatus: 0 }
+      : {
+          code: 'UNKNOWN_ERROR',
+          message: 'Terjadi kesalahan. Silakan coba lagi.',
+          fieldErrors: {},
+          requestId: null,
+          httpStatus: 0,
+        }
   } finally {
     loading.value = false
   }
@@ -53,7 +61,9 @@ async function submit() {
 <template>
   <div class="w-full max-w-sm mx-auto px-4">
     <div class="mb-8 text-center">
-      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900 mb-3">
+      <div
+        class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900 mb-3"
+      >
         <i class="pi pi-lock text-primary-600 dark:text-primary-400 text-xl" />
       </div>
       <h1 class="text-xl font-bold text-surface-900 dark:text-surface-0">Buat Kata Sandi Baru</h1>
@@ -73,7 +83,10 @@ async function submit() {
 
       <!-- Current password -->
       <div class="flex flex-col gap-1">
-        <label for="current_password" class="text-sm font-medium text-surface-700 dark:text-surface-200">
+        <label
+          for="current_password"
+          class="text-sm font-medium text-surface-700 dark:text-surface-200"
+        >
           Kata Sandi Sementara
         </label>
         <InputText
@@ -124,7 +137,10 @@ async function submit() {
 
       <!-- Confirm password -->
       <div class="flex flex-col gap-1">
-        <label for="confirmPassword" class="text-sm font-medium text-surface-700 dark:text-surface-200">
+        <label
+          for="password_confirmation"
+          class="text-sm font-medium text-surface-700 dark:text-surface-200"
+        >
           Konfirmasi Kata Sandi Baru
         </label>
         <div class="relative">

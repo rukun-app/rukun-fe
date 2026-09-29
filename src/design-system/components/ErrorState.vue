@@ -16,10 +16,7 @@ const emit = defineEmits<{ retry: [] }>()
 </script>
 
 <template>
-  <div
-    role="alert"
-    class="flex flex-col items-center justify-center gap-3 py-12 px-6 text-center"
-  >
+  <div role="alert" class="flex flex-col items-center justify-center gap-3 py-12 px-6 text-center">
     <span class="text-red-400" aria-hidden="true">
       <i class="pi pi-exclamation-circle text-5xl" />
     </span>

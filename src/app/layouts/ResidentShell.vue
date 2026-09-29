@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SessionActions from '@/auth/components/SessionActions.vue'
 import { computed } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
 
@@ -27,6 +28,7 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
       class="sticky top-0 z-30 bg-surface-0 border-b border-surface-200 px-4 py-3 flex items-center gap-3 safe-area-top"
     >
       <h1 class="text-base font-semibold text-surface-900 truncate flex-1">{{ pageTitle }}</h1>
+      <SessionActions />
     </header>
 
     <!-- Main scrollable content -->

@@ -2,8 +2,7 @@ import axios from 'axios'
 import { env } from '@/app/config/env'
 import { session } from '@/auth/stores/session'
 
-// ponytail: inject activeContextId via useContextStore() when Pinia is available post-FE-2
-// For now, context store reads are done via direct import to avoid circular deps at bootstrap.
+// Context transport is injected after Pinia is installed.
 let _getActiveContextId: (() => string | null) | null = null
 
 export function setContextIdProvider(fn: () => string | null): void {
@@ -12,9 +11,11 @@ export function setContextIdProvider(fn: () => string | null): void {
 
 export const http = axios.create({
   baseURL: env.VITE_API_BASE_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    'Accept-Language': 'id',
   },
 })
 
@@ -34,22 +35,22 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-// Unwrap BE envelope: {"success": true, "data": {...}} → response.data = inner data
+// Keep the envelope intact: generated types describe the complete response.
 http.interceptors.response.use(
-  (response) => {
-    if (response.data && typeof response.data === 'object' && 'success' in response.data) {
-      response.data = response.data.data
-    }
-    return response
-  },
+  (response) => response,
   async (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       // Skip redirect for the login endpoint itself (avoid redirect loop)
       const url = error.config?.url ?? ''
       if (!url.includes('/auth/login')) {
+        // An old request must not clear a newer login session.
+        if (error.config?.headers.Authorization !== `Bearer ${session.getToken()}`)
+          return Promise.reject(error)
         session.clear()
         const { useContextStore } = await import('@/contexts/stores/context')
         useContextStore().clearContexts()
+        const { queryClient } = await import('@/app/providers/query')
+        queryClient.clear()
         const { router } = await import('@/app/router')
         router.replace({ name: 'auth.login' })
       }

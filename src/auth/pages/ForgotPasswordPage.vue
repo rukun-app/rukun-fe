@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
 import { ref } from 'vue'
 import { apiForgotPassword } from '@/auth/api/auth'
 import { normalizeApiError, isApiError } from '@/api/errors/normalizer'
@@ -10,15 +12,22 @@ const error = ref<NormalizedApiError | null>(null)
 const sent = ref(false)
 
 async function submit() {
+  if (loading.value) return
   loading.value = true
   error.value = null
   try {
-    await apiForgotPassword({ identifier: identifier.value })
+    await apiForgotPassword({ email: identifier.value })
     sent.value = true
   } catch (e) {
     error.value = isApiError(e)
       ? normalizeApiError(e)
-      : { code: 'UNKNOWN_ERROR', message: 'Terjadi kesalahan. Silakan coba lagi.', fieldErrors: {}, requestId: null, httpStatus: 0 }
+      : {
+          code: 'UNKNOWN_ERROR',
+          message: 'Terjadi kesalahan. Silakan coba lagi.',
+          fieldErrors: {},
+          requestId: null,
+          httpStatus: 0,
+        }
   } finally {
     loading.value = false
   }
@@ -37,7 +46,8 @@ async function submit() {
       </RouterLink>
       <h1 class="text-xl font-bold text-surface-900 dark:text-surface-0">Lupa Kata Sandi</h1>
       <p class="text-surface-500 mt-1 text-sm">
-        Masukkan email atau nomor HP Anda. Kami akan mengirimkan instruksi reset.
+        Masukkan email Anda untuk meminta tautan reset. Jika akun hanya memakai nomor HP, hubungi
+        pengurus.
       </p>
     </div>
 
@@ -46,7 +56,7 @@ async function submit() {
       role="status"
       class="rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-300"
     >
-      Instruksi reset kata sandi telah dikirim. Periksa email atau SMS Anda.
+      Jika email terdaftar, instruksi reset akan dikirim ke email tersebut.
     </div>
 
     <form v-else class="space-y-4" novalidate @submit.prevent="submit">
@@ -60,14 +70,15 @@ async function submit() {
 
       <div class="flex flex-col gap-1">
         <label for="identifier" class="text-sm font-medium text-surface-700 dark:text-surface-200">
-          Email / Nomor HP
+          Email
         </label>
         <InputText
           id="identifier"
           v-model="identifier"
           autocomplete="username"
           inputmode="email"
-          placeholder="email@contoh.com atau 08xx"
+          type="email"
+          placeholder="email@contoh.com"
           :disabled="loading"
           class="w-full"
         />

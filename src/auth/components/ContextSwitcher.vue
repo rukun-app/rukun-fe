@@ -4,12 +4,10 @@
  * Emits 'switched' after a successful context change.
  */
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useContextStore } from '@/contexts/stores/context'
 
 const emit = defineEmits<{ switched: [] }>()
 
-const router = useRouter()
 const ctxStore = useContextStore()
 
 const contexts = computed(() => ctxStore.availableContexts)
@@ -29,19 +27,9 @@ const typeIcon: Record<string, string> = {
   system: 'pi-server',
 }
 
-const shellRoute: Record<string, string> = {
-  household: 'app.home',
-  management: 'manage.dashboard',
-  vendor: 'vendor.dashboard',
-  system: 'system.overview',
-}
-
-async function select(contextId: string, contextType: string) {
-  if (contextId === activeId.value) return
+function select(contextId: string) {
   const ok = ctxStore.switchContext(contextId)
   if (!ok) return
-  const dest = shellRoute[contextType] ?? 'app.home'
-  await router.push({ name: dest })
   emit('switched')
 }
 </script>
@@ -60,18 +48,12 @@ async function select(contextId: string, contextType: string) {
     >
       <button
         type="button"
-        class="w-full flex items-center gap-3 px-4 py-2.5 text-left rounded-lg transition-colors
-               hover:bg-surface-100 dark:hover:bg-surface-700
-               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
-               aria-[selected=true]:bg-primary-50 dark:aria-[selected=true]:bg-primary-950
-               aria-[selected=true]:text-primary-700 dark:aria-[selected=true]:text-primary-300"
+        class="w-full flex items-center gap-3 px-4 py-2.5 text-left rounded-lg transition-colors hover:bg-surface-100 dark:hover:bg-surface-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 aria-[selected=true]:bg-primary-50 dark:aria-[selected=true]:bg-primary-950 aria-[selected=true]:text-primary-700 dark:aria-[selected=true]:text-primary-300"
         :aria-current="ctx.id === activeId ? 'true' : undefined"
-        @click="select(ctx.id, ctx.type)"
+        @click="select(ctx.id)"
       >
         <span
-          class="inline-flex items-center justify-center w-8 h-8 rounded-full
-                 bg-surface-100 dark:bg-surface-700
-                 group-[&[aria-selected=true]]:bg-primary-100 dark:group-[&[aria-selected=true]]:bg-primary-900 shrink-0"
+          class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-700 group-[&[aria-selected=true]]:bg-primary-100 dark:group-[&[aria-selected=true]]:bg-primary-900 shrink-0"
         >
           <i :class="`pi ${typeIcon[ctx.type] ?? 'pi-user'} text-sm`" />
         </span>

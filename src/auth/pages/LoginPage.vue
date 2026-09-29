@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
 import { ref, computed } from 'vue'
 import { useAuth } from '@/auth/composables/useAuth'
 import type { LoginRequest } from '@/auth/api/types'
