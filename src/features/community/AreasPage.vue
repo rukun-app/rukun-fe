@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { recordOptions, areaKinds } from './options'
 import { tr } from '@/i18n'
 import ReferenceSelect from './ReferenceSelect.vue'
-import { createIntentKey } from '@/shared/utils/idempotency'
+import { useFormSubmission } from '@/shared/composables/useFormSubmission'
 import { computed, ref } from 'vue'
 import { Form, type FormSubmitEvent } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
@@ -13,25 +14,22 @@ import Column from 'primevue/column'
 import { createArea } from '@/api/generated/endpoints'
 import type { CreateArea } from '@/api/generated/models'
 import { useAreas } from './queries'
-import MutationErrors from './MutationErrors.vue'
+import { MutationErrors } from '@/design-system'
 import { useContextStore } from '@/contexts/stores/context'
-import { AppDataTable } from '@/design-system'
+import { AppDataTable, PageHeader } from '@/design-system'
 import { normalizeApiError } from '@/api/errors/normalizer'
-import type { NormalizedApiError } from '@/api/errors/types'
 import { queryClient } from '@/app/providers/query'
 const context = useContextStore()
 const cursor = ref<string>()
 const query = useAreas(cursor)
 const result = computed(() => query.data.value?.data)
 const creating = ref(false)
-const busy = ref(false)
-const error = ref<NormalizedApiError | null>(null)
-const intentKey = createIntentKey()
+const { busy, error, submit } = useFormSubmission()
 const resolver = computed(() =>
   zodResolver(
     z
       .object({
-        kind: z.enum(['rw', 'rt']),
+        kind: z.enum(areaKinds),
         code: z.string().trim().min(1, tr('Kode wajib diisi')),
         name: z.string().trim().min(1, tr('Nama wilayah wajib diisi')),
         parent_id: z.string().optional(),
@@ -48,45 +46,44 @@ const resolver = computed(() =>
 )
 
 async function save(event: FormSubmitEvent) {
-  if (!event.valid || busy.value) return
-  busy.value = true
-  error.value = null
-  try {
-    const data = event.values
-    await createArea(
-      {
-        kind: data.kind,
-        code: data.code,
-        name: data.name,
-        ...(data.kind === 'rt' ? { parent_id: data.parent_id } : {}),
-      } as CreateArea,
-      { headers: { 'Idempotency-Key': intentKey(event.values) } },
-    )
-    creating.value = false
-    await queryClient.invalidateQueries({ queryKey: ['community'] })
-  } catch (e) {
-    error.value = normalizeApiError(e)
-  } finally {
-    busy.value = false
-  }
+  await submit(
+    event.valid,
+    event.values,
+    async (headers) => {
+      const data = event.values
+      await createArea(
+        {
+          kind: data.kind,
+          code: data.code,
+          name: data.name,
+          ...(data.kind === 'rt' ? { parent_id: data.parent_id } : {}),
+        } as CreateArea,
+        { headers },
+      )
+    },
+    async () => {
+      creating.value = false
+      await queryClient.invalidateQueries({ queryKey: ['community'] })
+    },
+  )
 }
 </script>
 <template>
   <section class="page-container">
-    <div class="page-heading">
-      <div>
-        <span class="eyebrow"> {{ tr('DATA LINGKUNGAN') }} </span>
-        <h2>{{ tr('Wilayah RT / RW') }}</h2>
-        <p>{{ tr('Struktur wilayah yang menyatukan keluarga dan warga.') }}</p>
-      </div>
-      <Button
-        v-if="context.can('areas.manage')"
-        :label="creating ? tr('Tutup formulir') : tr('Tambah wilayah')"
-        :icon="creating ? 'pi pi-times' : 'pi pi-plus'"
-        :severity="creating ? 'secondary' : undefined"
-        @click="creating = !creating"
-      />
-    </div>
+    <PageHeader
+      :eyebrow="tr('DATA LINGKUNGAN')"
+      :title="tr('Wilayah RT / RW')"
+      :description="tr('Struktur wilayah yang menyatukan keluarga dan warga.')"
+    >
+      <template #actions
+        ><Button
+          v-if="context.can('areas.manage')"
+          :label="creating ? tr('Tutup formulir') : tr('Tambah wilayah')"
+          :icon="creating ? 'pi pi-times' : 'pi pi-plus'"
+          :disabled="busy"
+          :severity="creating ? 'secondary' : undefined"
+          @click="creating = !creating" /></template
+    ></PageHeader>
     <Form
       v-if="creating"
       v-slot="$form"
@@ -103,16 +100,13 @@ async function save(event: FormSubmitEvent) {
         </div>
       </div>
       <MutationErrors :error="error" />
-      <div class="form-fields">
+      <fieldset :disabled="busy" class="form-fields">
         <div class="form-field">
           <label for="kind"> {{ tr('Jenis wilayah') }} <span class="required">*</span></label
           ><Select
             input-id="kind"
             name="kind"
-            :options="[
-              { label: tr('Rukun Warga (RW)'), value: 'rw' },
-              { label: tr('Rukun Tetangga (RT)'), value: 'rt' },
-            ]"
+            :options="recordOptions(areaKinds)"
             option-label="label"
             option-value="value"
           />
@@ -142,7 +136,7 @@ async function save(event: FormSubmitEvent) {
           /><small class="text-red-700">{{ $form.parent_id?.error?.message }}</small
           ><small class="field-help"> {{ tr('RT harus berada di bawah satu RW.') }} </small>
         </div>
-      </div>
+      </fieldset>
       <div class="form-actions">
         <Button
           :label="tr('Batal')"

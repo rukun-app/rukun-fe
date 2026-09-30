@@ -408,3 +408,15 @@ test('resident DataTable displays readable columns without technical reference',
   ).toBeVisible()
   await page.screenshot({ path: 'e2e/artifacts/datatable-dark-en.png', fullPage: true })
 })
+
+test('PrimeVue dropdown changes trigger the shared unsaved form guard', async ({ page }) => {
+  await page.goto('/manage/households/new')
+  await page.locator('#occupancy').click()
+  await page.getByRole('option', { name: 'Disewakan', exact: true }).click()
+  page.once('dialog', (dialog) => dialog.dismiss())
+  await page.getByRole('link', { name: 'Kembali ke daftar KK' }).click()
+  await expect(page).toHaveURL(/\/manage\/households\/new$/)
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('link', { name: 'Kembali ke daftar KK' }).click()
+  await expect(page).toHaveURL(/\/manage\/households$/)
+})

@@ -1283,6 +1283,12 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
 - [x] PrimeVue Forms + Zod, backend field errors, duplicate-submit protection,
   idempotency key stabil untuk retry payload yang sama.
 - [x] NIK/KK tidak dimuat melalui list/detail biasa.
+- [x] Review reuse tahap berjalan: PrimeVue Toolbar/Message/Tag/Password digunakan;
+  primitive tidak diimplementasikan ulang. PageHeader digunakan lima halaman.
+- [x] Composable submit + idempotency/error/locking, guard unsaved changes,
+  pemisahan query ReferenceSelect, dan katalog opsi domain terpusat.
+- [x] Regression test lifecycle submit, route/unload guard, dropdown dirty,
+  serta keyboard/locale Password. Temuan dicatat di docs/component-review.md.
 - [ ] Dashboard warga, profil/account dan notification inbox.
 - [ ] Mutasi membership, import/export UI dan progress/result.
 - [ ] Scoped role assignment dan reveal/edit data sensitif.
@@ -1292,7 +1298,7 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
 - [ ] Uji manual oleh pengguna terhadap akun/backend development.
 
 FE-3 belum ditandai selesai. FE-4 dan fase berikutnya belum dimulai.
-Verifikasi lokal 2026-09-30: **39/39 unit/component test (10 file)** dan **26/26 E2E
+Verifikasi lokal 2026-09-30: **46/46 unit/component test (13 file)** dan **28/28 E2E
 Chromium** lulus. TypeScript aplikasi/config, lint, format, production build,
 install frozen lockfile, dan OpenAPI drift check lulus. E2E memakai fixture
 kontrak. Login/pembacaan daftar akun development diperiksa pada iterasi UI;

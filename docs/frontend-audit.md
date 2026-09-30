@@ -83,8 +83,8 @@ terhadap snapshot versioned, bukan polling backend live pada setiap CI run.
 ## Hasil penyerahan tahap ini
 
 Pada Node 24: install frozen lockfile, typecheck aplikasi/config, lint, format,
-production build, dan OpenAPI drift check lulus. Vitest: **39 unit/component test / 10 file
-lulus**. Playwright Chromium: **26 test lulus**. Login dan dashboard mobile
+production build, dan OpenAPI drift check lulus. Vitest: **46 unit/component test / 13 file
+lulus**. Playwright Chromium: **28 test lulus**. Login dan dashboard mobile
 juga diperiksa secara visual dari screenshot browser.
 
 Sesuai arahan pengguna, pekerjaan berhenti pada perbaikan foundation/auth dan
@@ -108,3 +108,10 @@ di DTO, warga menggunakan nama. Search dan sort terbatas halaman cursor dan
 berlabel eksplisit; backend belum menyediakan search/sort global maupun total.
 Tidak ada request per baris untuk menebak kepala keluarga. Test mencakup reusable
 states, slots, search/sort reset, pagination, dan keterbacaan kolom di browser.
+
+## Review maintainability sebelum fase berikutnya
+
+Lihat [review komponen](component-review.md): duplikasi submit/guard diangkat ke
+composable, opsi domain disatukan, query referensi dipisahkan dari view, dan
+primitive custom diganti PrimeVue Toolbar/Message/Tag/Password. Refactor tetap
+dalam fase saat ini; tidak mengubah authorization maupun kontrak backend.

@@ -59,6 +59,9 @@ export function useHousehold(id: Ref<string>) {
   const context = useContextStore()
   return useQuery({
     queryKey: computed(() => ['community', context.activeContextId, 'household', id.value]),
+    // Editable forms must not be remounted by background focus/reconnect refetches.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     queryFn: ({ signal }) => showHousehold(id.value, undefined, signal),
     enabled: computed(() => !!id.value && context.can('households.view')),
   })
@@ -67,6 +70,8 @@ export function useResident(id: Ref<string>) {
   const context = useContextStore()
   return useQuery({
     queryKey: computed(() => ['community', context.activeContextId, 'resident', id.value]),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     queryFn: ({ signal }) => showResident(id.value, undefined, signal),
     enabled: computed(() => !!id.value && context.can('residents.view')),
   })

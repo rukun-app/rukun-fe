@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { recordOptions, occupancyValues, householdStatuses } from './options'
 import { tr } from '@/i18n'
 import ReferenceSelect from './ReferenceSelect.vue'
-import { createIntentKey } from '@/shared/utils/idempotency'
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
+import { useUnsavedChanges } from '@/shared/composables/useUnsavedChanges'
+import { useFormSubmission } from '@/shared/composables/useFormSubmission'
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Form, type FormSubmitEvent } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -13,11 +15,10 @@ import Select from 'primevue/select'
 import { createHousehold, updateHousehold } from '@/api/generated/endpoints'
 import type { CreateHousehold, UpdateHousehold } from '@/api/generated/models'
 import { useHousehold } from './queries'
-import MutationErrors from './MutationErrors.vue'
-import { AppSkeleton, ErrorState } from '@/design-system'
+import { MutationErrors } from '@/design-system'
+import { AppSkeleton, ErrorState, PageHeader } from '@/design-system'
 import { queryClient } from '@/app/providers/query'
 import { normalizeApiError } from '@/api/errors/normalizer'
-import type { NormalizedApiError } from '@/api/errors/types'
 import { useContextStore } from '@/contexts/stores/context'
 const route = useRoute()
 const router = useRouter()
@@ -34,17 +35,12 @@ const initial = computed(() => ({
   status: 'active',
   ...query.data.value?.data,
 }))
-const busy = ref(false)
-const dirty = ref(false)
-const error = ref<NormalizedApiError | null>(null)
-const intentKey = createIntentKey()
+const { dirty } = useUnsavedChanges()
+const { busy, error, submit } = useFormSubmission()
 watch(id, () => {
   dirty.value = false
   error.value = null
 })
-onBeforeRouteLeave(
-  () => !dirty.value || window.confirm(tr('Perubahan belum disimpan. Tinggalkan halaman?')),
-)
 const resolver = computed(() =>
   zodResolver(
     z.object({
@@ -52,44 +48,43 @@ const resolver = computed(() =>
       address: z.string().trim().min(1, tr('Alamat wajib diisi')).max(2000),
       block: z.string().nullable().optional(),
       house_number: z.string().nullable().optional(),
-      occupancy_status: z.enum(['occupied', 'vacant', 'rented', 'other']),
-      status: z.enum(['active', 'moved', 'inactive']).optional(),
+      occupancy_status: z.enum(occupancyValues),
+      status: z.enum(householdStatuses).optional(),
     }),
   ),
 )
 async function save(event: FormSubmitEvent) {
-  if (!event.valid || busy.value) return
-  busy.value = true
-  error.value = null
-  try {
-    const { address, block, house_number, occupancy_status, status } = event.values
-    if (editing.value)
-      await updateHousehold(id.value, {
-        address,
-        block,
-        house_number,
-        occupancy_status,
-        status,
-      } as UpdateHousehold)
-    else
-      await createHousehold(
-        {
-          area_id: event.values.area_id,
+  await submit(
+    event.valid,
+    event.values,
+    async (headers) => {
+      const { address, block, house_number, occupancy_status, status } = event.values
+      if (editing.value)
+        await updateHousehold(id.value, {
           address,
           block,
           house_number,
           occupancy_status,
-        } as CreateHousehold,
-        { headers: { 'Idempotency-Key': intentKey(event.values) } },
-      )
-    dirty.value = false
-    await queryClient.invalidateQueries({ queryKey: ['community'] })
-    await router.push('/manage/households')
-  } catch (e) {
-    error.value = normalizeApiError(e)
-  } finally {
-    busy.value = false
-  }
+          status,
+        } as UpdateHousehold)
+      else
+        await createHousehold(
+          {
+            area_id: event.values.area_id,
+            address,
+            block,
+            house_number,
+            occupancy_status,
+          } as CreateHousehold,
+          { headers },
+        )
+    },
+    async () => {
+      dirty.value = false
+      await queryClient.invalidateQueries({ queryKey: ['community'] })
+      await router.push('/manage/households')
+    },
+  )
 }
 </script>
 <template>
@@ -97,19 +92,15 @@ async function save(event: FormSubmitEvent) {
     <RouterLink to="/manage/households" class="back-link"
       ><i class="pi pi-arrow-left" aria-hidden="true" /> {{ tr('Kembali ke daftar KK') }}
     </RouterLink>
-    <div class="page-heading">
-      <div>
-        <span class="eyebrow"> {{ tr('DATA KELUARGA') }} </span>
-        <h2>{{ editing ? tr('Detail Kartu Keluarga') : tr('Tambah Kartu Keluarga') }}</h2>
-        <p>
-          {{
-            editing
-              ? tr('Tinjau dan perbarui informasi rumah tangga.')
-              : tr('Catat rumah tangga sebagai bagian dari lingkungan Anda.')
-          }}
-        </p>
-      </div>
-    </div>
+    <PageHeader
+      :eyebrow="tr('DATA KELUARGA')"
+      :title="editing ? tr('Detail Kartu Keluarga') : tr('Tambah Kartu Keluarga')"
+      :description="
+        editing
+          ? tr('Tinjau dan perbarui informasi rumah tangga.')
+          : tr('Catat rumah tangga sebagai bagian dari lingkungan Anda.')
+      "
+    ></PageHeader>
     <AppSkeleton v-if="editing && query.isPending.value" />
     <ErrorState
       v-else-if="editing && query.isError.value"
@@ -171,14 +162,10 @@ async function save(event: FormSubmitEvent) {
           <div class="form-field">
             <label for="occupancy"> {{ tr('Hunian') }} </label
             ><Select
+              @change="dirty = true"
               input-id="occupancy"
               name="occupancy_status"
-              :options="[
-                { label: tr('Dihuni'), value: 'occupied' },
-                { label: tr('Kosong'), value: 'vacant' },
-                { label: tr('Disewakan'), value: 'rented' },
-                { label: tr('Lainnya'), value: 'other' },
-              ]"
+              :options="recordOptions(occupancyValues)"
               option-label="label"
               option-value="value"
             />
@@ -186,13 +173,10 @@ async function save(event: FormSubmitEvent) {
           <div v-if="editing" class="form-field">
             <label for="status"> {{ tr('Status') }} </label
             ><Select
+              @change="dirty = true"
               input-id="status"
               name="status"
-              :options="[
-                { label: tr('Aktif'), value: 'active' },
-                { label: tr('Pindah'), value: 'moved' },
-                { label: tr('Tidak aktif'), value: 'inactive' },
-              ]"
+              :options="recordOptions(householdStatuses)"
               option-label="label"
               option-value="value"
             />

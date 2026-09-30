@@ -5,10 +5,10 @@ import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import { useHouseholds } from './queries'
-import { occupancyLabel } from './tableLabels'
-import RecordStatus from './RecordStatus.vue'
+import { recordLabel } from './options'
+import { StatusBadge } from '@/design-system'
 import { useContextStore } from '@/contexts/stores/context'
-import { AppDataTable } from '@/design-system'
+import { AppDataTable, PageHeader } from '@/design-system'
 import { normalizeApiError } from '@/api/errors/normalizer'
 const context = useContextStore()
 const cursor = ref<string>()
@@ -26,16 +26,15 @@ watch(area, () => {
 </script>
 <template>
   <section class="page-container">
-    <div class="page-heading">
-      <div>
-        <span class="eyebrow"> {{ tr('DATA LINGKUNGAN') }} </span>
-        <h2>{{ tr('Kartu Keluarga') }}</h2>
-        <p>{{ tr('Rumah tangga yang menjadi bagian dari lingkungan Anda.') }}</p>
-      </div>
-      <RouterLink v-if="context.can('households.manage')" to="/manage/households/new"
-        ><Button :label="tr('Tambah KK')" icon="pi pi-plus"
-      /></RouterLink>
-    </div>
+    <PageHeader
+      :eyebrow="tr('DATA LINGKUNGAN')"
+      :title="tr('Kartu Keluarga')"
+      :description="tr('Rumah tangga yang menjadi bagian dari lingkungan Anda.')"
+    >
+      <template #actions
+        ><RouterLink v-if="context.can('households.manage')" to="/manage/households/new"
+          ><Button :label="tr('Tambah KK')" icon="pi pi-plus" /></RouterLink></template
+    ></PageHeader>
     <AppDataTable
       :rows="result?.data ?? []"
       :title="tr('Daftar keluarga')"
@@ -82,7 +81,7 @@ watch(area, () => {
         ></Column
       >
       <Column field="occupancy_status" sortable :header="tr('HUNIAN')"
-        ><template #body="{ data }">{{ occupancyLabel(data.occupancy_status) }}</template></Column
+        ><template #body="{ data }">{{ recordLabel(data.occupancy_status) }}</template></Column
       >
       <Column :header="tr('BLOK / NOMOR')"
         ><template #body="{ data }"
@@ -90,7 +89,8 @@ watch(area, () => {
         ></Column
       >
       <Column field="status" sortable :header="tr('STATUS')"
-        ><template #body="{ data }"><RecordStatus :status="data.status" /></template
+        ><template #body="{ data }"
+          ><StatusBadge :status="data.status" :label="recordLabel(data.status)" /></template
       ></Column>
       <Column :header="tr('AKSI')"
         ><template #body="{ data }"

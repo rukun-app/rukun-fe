@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { usePasswordPassThrough } from '@/shared/composables/usePasswordPassThrough'
+const passwordPassThrough = usePasswordPassThrough()
 import { tr } from '@/i18n'
-import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import Password from 'primevue/password'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiChangePassword } from '@/auth/api/auth'
@@ -14,8 +16,6 @@ const router = useRouter()
 const form = ref({ current_password: '', password: '', password_confirmation: '' })
 const loading = ref(false)
 const error = ref<NormalizedApiError | null>(null)
-const showNew = ref(false)
-const showConfirm = ref(false)
 
 const mismatch = computed(
   () =>
@@ -94,11 +94,13 @@ async function submit() {
         >
           {{ tr('Kata Sandi Sementara') }}
         </label>
-        <InputText
-          id="current_password"
+        <Password
+          :pt="passwordPassThrough"
+          :feedback="false"
+          fluid
+          input-id="current_password"
           v-model="form.current_password"
-          type="password"
-          autocomplete="current-password"
+          :input-props="{ autocomplete: 'current-password' }"
           :placeholder="tr('••••••••')"
           :invalid="!!error?.fieldErrors['current_password']"
           :disabled="loading"
@@ -114,27 +116,19 @@ async function submit() {
         <label for="password" class="text-sm font-medium text-surface-700 dark:text-surface-200">
           {{ tr('Kata Sandi Baru') }}
         </label>
-        <div class="relative">
-          <InputText
-            id="password"
-            v-model="form.password"
-            :type="showNew ? 'text' : 'password'"
-            autocomplete="new-password"
-            :placeholder="tr('Minimal 8 karakter')"
-            :invalid="!!error?.fieldErrors['password']"
-            :disabled="loading"
-            class="w-full pr-10"
-          />
-          <button
-            type="button"
-            :aria-label="showNew ? tr('Sembunyikan') : tr('Tampilkan')"
-            :aria-pressed="showNew"
-            class="absolute inset-y-0 right-3 flex items-center text-surface-400 hover:text-surface-600 focus-visible:outline-none"
-            @click="showNew = !showNew"
-          >
-            <i :class="showNew ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
-          </button>
-        </div>
+        <Password
+          :pt="passwordPassThrough"
+          :feedback="false"
+          toggle-mask
+          fluid
+          input-id="password"
+          v-model="form.password"
+          :input-props="{ autocomplete: 'new-password' }"
+          :placeholder="tr('Minimal 8 karakter')"
+          :invalid="!!error?.fieldErrors['password']"
+          :disabled="loading"
+          class="w-full"
+        />
         <small v-if="error?.fieldErrors['password']" class="text-red-600 dark:text-red-400">
           {{ error.fieldErrors['password']![0] }}
         </small>
@@ -148,27 +142,19 @@ async function submit() {
         >
           {{ tr('Konfirmasi Kata Sandi Baru') }}
         </label>
-        <div class="relative">
-          <InputText
-            id="password_confirmation"
-            v-model="form.password_confirmation"
-            :type="showConfirm ? 'text' : 'password'"
-            autocomplete="new-password"
-            :placeholder="tr('••••••••')"
-            :invalid="mismatch"
-            :disabled="loading"
-            class="w-full pr-10"
-          />
-          <button
-            type="button"
-            :aria-label="showConfirm ? tr('Sembunyikan') : tr('Tampilkan')"
-            :aria-pressed="showConfirm"
-            class="absolute inset-y-0 right-3 flex items-center text-surface-400 hover:text-surface-600 focus-visible:outline-none"
-            @click="showConfirm = !showConfirm"
-          >
-            <i :class="showConfirm ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
-          </button>
-        </div>
+        <Password
+          :pt="passwordPassThrough"
+          :feedback="false"
+          toggle-mask
+          fluid
+          input-id="password_confirmation"
+          v-model="form.password_confirmation"
+          :input-props="{ autocomplete: 'new-password' }"
+          :placeholder="tr('••••••••')"
+          :invalid="mismatch"
+          :disabled="loading"
+          class="w-full"
+        />
         <small v-if="mismatch" class="text-red-600 dark:text-red-400">
           {{ tr('Kata sandi tidak cocok') }}
         </small>

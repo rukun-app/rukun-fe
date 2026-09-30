@@ -124,3 +124,17 @@ test('mobile login fits the viewport', async ({ page }) => {
   )
   await page.screenshot({ path: 'e2e/artifacts/login-mobile.png', fullPage: true })
 })
+
+test('PrimeVue Password toggles visibility with localized accessible labels', async ({ page }) => {
+  await page.goto('/auth/login')
+  const input = page.getByLabel('Kata Sandi', { exact: true })
+  await input.fill('test-password')
+  await expect(input).toHaveAttribute('type', 'password')
+  await page.getByRole('button', { name: 'Tampilkan kata sandi' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(input).toHaveAttribute('type', 'text')
+  await page.getByRole('combobox', { name: 'Bahasa', exact: true }).selectOption('en')
+  await page.getByRole('button', { name: 'Hide password' }).focus()
+  await page.keyboard.press('Space')
+  await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('type', 'password')
+})

@@ -1949,3 +1949,24 @@ a {
     width: 0;
   }
 }
+
+/* PageHeader delegates its layout to PrimeVue Toolbar. */
+.page-toolbar.p-toolbar {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  gap: 20px;
+}
+.page-toolbar .p-toolbar-start {
+  min-width: 0;
+  flex: 1;
+}
+.page-toolbar .p-toolbar-end {
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .page-toolbar .p-toolbar-start {
+    flex-basis: 100%;
+  }
+}

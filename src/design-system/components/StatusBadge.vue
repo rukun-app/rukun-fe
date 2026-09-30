@@ -1,45 +1,28 @@
 <script setup lang="ts">
+import Tag from 'primevue/tag'
+import { computed } from 'vue'
 import { tr } from '@/i18n'
-/**
- * StatusBadge — maps a string status to a visual badge.
- * Colors are semantic; never rely on color alone (always show text).
- */
-
-type Status =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'paid'
-  | 'unpaid'
-  | 'overdue'
-  | 'active'
-  | 'inactive'
-  | 'processing'
-
-const props = defineProps<{ status: Status; label?: string }>()
-
-const config: Record<Status, { cls: string; defaultLabel: string }> = {
-  pending: { cls: 'bg-amber-100 text-amber-800', defaultLabel: 'Menunggu' },
-  approved: { cls: 'bg-green-100 text-green-800', defaultLabel: 'Disetujui' },
-  rejected: { cls: 'bg-red-100 text-red-800', defaultLabel: 'Ditolak' },
-  paid: { cls: 'bg-green-100 text-green-800', defaultLabel: 'Lunas' },
-  unpaid: { cls: 'bg-amber-100 text-amber-800', defaultLabel: 'Belum Lunas' },
-  overdue: { cls: 'bg-red-100 text-red-800', defaultLabel: 'Jatuh Tempo' },
-  active: { cls: 'bg-teal-100 text-teal-800', defaultLabel: 'Aktif' },
-  inactive: { cls: 'bg-surface-100 text-surface-600', defaultLabel: 'Tidak Aktif' },
-  processing: { cls: 'bg-blue-100 text-blue-800', defaultLabel: 'Diproses' },
+const props = defineProps<{ status?: string; label?: string }>()
+const config: Record<
+  string,
+  { severity: 'success' | 'warn' | 'danger' | 'info' | 'secondary'; label: string }
+> = {
+  pending: { severity: 'warn', label: 'Menunggu' },
+  approved: { severity: 'success', label: 'Disetujui' },
+  rejected: { severity: 'danger', label: 'Ditolak' },
+  paid: { severity: 'success', label: 'Lunas' },
+  unpaid: { severity: 'warn', label: 'Belum Lunas' },
+  overdue: { severity: 'danger', label: 'Jatuh Tempo' },
+  active: { severity: 'success', label: 'Aktif' },
+  inactive: { severity: 'secondary', label: 'Tidak aktif' },
+  processing: { severity: 'info', label: 'Diproses' },
+  moved: { severity: 'warn', label: 'Pindah' },
+  deceased: { severity: 'secondary', label: 'Meninggal' },
 }
-
-const current = () => config[props.status]
+const current = computed(
+  () => config[props.status ?? ''] ?? { severity: 'secondary' as const, label: 'Belum tersedia' },
+)
 </script>
-
 <template>
-  <span
-    :class="[
-      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-      current().cls,
-    ]"
-  >
-    {{ tr(label ?? current().defaultLabel) }}
-  </span>
+  <Tag :severity="current.severity" :value="label ?? tr(current.label)" rounded />
 </template>

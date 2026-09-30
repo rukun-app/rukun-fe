@@ -133,13 +133,28 @@ pindah cursor, buka detail dari alamat/nama, serta cek tabel pada ponsel, dark m
 dan EN. Tes komponen mencakup slot kolom, search/sort/reset, opaque cursor,
 loading/error/empty/retry; tes browser memastikan referensi internal tidak tampil.
 
+## Review reuse sebelum fase selanjutnya
+
+UI memprioritaskan PrimeVue langsung. Header memakai Toolbar, error mutasi memakai
+Message, status memakai Tag, dan input password memakai Password. Wrapper yang
+tersisa menangani pola aplikasi berulang, bukan implementasi ulang primitive.
+
+Logika submit/error/idempotency dan guard unsaved changes kini ada pada composable
+bersama. Query select referensi dipisahkan dari view; enum/label form dan tabel
+bersumber pada satu katalog domain. Lihat [review komponen](docs/component-review.md)
+untuk temuan, perbaikan, batas reuse, dan konvensi implementasi berikutnya.
+
+Tambahan testing manual: ubah dropdown hunian lalu coba tinggalkan form; batalkan
+untuk mempertahankan perubahan. Coba toggle password dengan keyboard dan bahasa EN.
+Fase berikutnya tetap belum dimulai.
+
 ## Hasil verifikasi — 30 September 2026
 
 | Pemeriksaan                                 | Hasil             |
 | ------------------------------------------- | ----------------- |
 | Install dari lockfile                       | Lulus             |
-| Unit test (Vitest 4, 10 file)               | **39/39 lulus**   |
-| Browser E2E (Chromium)                      | **26/26 lulus**   |
+| Unit test (Vitest 4, 13 file)               | **46/46 lulus**   |
+| Browser E2E (Chromium)                      | **28/28 lulus**   |
 | TypeScript source Vue dan konfigurasi Node  | Lulus             |
 | ESLint dan Prettier                         | Lulus             |
 | Production build + service worker           | Lulus             |

@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { usePasswordPassThrough } from '@/shared/composables/usePasswordPassThrough'
+const passwordPassThrough = usePasswordPassThrough()
 import { tr } from '@/i18n'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import Password from 'primevue/password'
 import { ref, computed } from 'vue'
 import { useAuth } from '@/auth/composables/useAuth'
 import type { LoginRequest } from '@/auth/api/types'
@@ -9,7 +12,6 @@ import type { LoginRequest } from '@/auth/api/types'
 const { loading, error, login } = useAuth()
 
 const form = ref<LoginRequest>({ identifier: '', password: '', device_name: 'web' })
-const showPassword = ref(false)
 
 const fieldError = computed(() => error.value?.fieldErrors ?? {})
 
@@ -75,27 +77,19 @@ async function submit() {
             {{ tr('Lupa kata sandi?') }}
           </RouterLink>
         </div>
-        <div class="relative">
-          <InputText
-            id="password"
-            v-model="form.password"
-            :type="showPassword ? 'text' : 'password'"
-            autocomplete="current-password"
-            :placeholder="tr('••••••••')"
-            :invalid="!!fieldError['password']"
-            :disabled="loading"
-            class="w-full pr-10"
-          />
-          <button
-            type="button"
-            :aria-label="showPassword ? tr('Sembunyikan kata sandi') : tr('Tampilkan kata sandi')"
-            :aria-pressed="showPassword"
-            class="absolute inset-y-0 right-3 flex items-center text-surface-400 hover:text-surface-600 focus-visible:outline-none"
-            @click="showPassword = !showPassword"
-          >
-            <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
-          </button>
-        </div>
+        <Password
+          :pt="passwordPassThrough"
+          :feedback="false"
+          toggle-mask
+          fluid
+          input-id="password"
+          v-model="form.password"
+          :input-props="{ autocomplete: 'current-password' }"
+          :placeholder="tr('••••••••')"
+          :invalid="!!fieldError['password']"
+          :disabled="loading"
+          class="w-full"
+        />
         <small v-if="fieldError['password']" class="text-red-600 dark:text-red-400">
           {{ fieldError['password']![0] }}
         </small>
