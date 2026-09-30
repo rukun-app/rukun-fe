@@ -133,6 +133,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Wilayah', requiredCapabilities: ['areas.view'] },
       },
       {
+        path: 'areas/:id',
+        name: 'manage.areas.detail',
+        component: () => import('@/features/community/AreaPage.vue'),
+        meta: { title: 'Detail wilayah', requiredCapabilities: ['areas.view'] },
+      },
+      {
         path: 'households/new',
         name: 'manage.households.new',
         component: () => import('@/features/community/HouseholdPage.vue'),

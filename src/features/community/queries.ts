@@ -2,6 +2,7 @@ import { computed, type Ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import {
   listAreas,
+  showArea,
   listHouseholds,
   listResidents,
   showHousehold,
@@ -74,5 +75,16 @@ export function useResident(id: Ref<string>) {
     refetchOnReconnect: false,
     queryFn: ({ signal }) => showResident(id.value, undefined, signal),
     enabled: computed(() => !!id.value && context.can('residents.view')),
+  })
+}
+
+export function useArea(id: Ref<string>) {
+  const context = useContextStore()
+  return useQuery({
+    queryKey: computed(() => ['community', context.activeContextId, 'area', id.value]),
+    enabled: computed(() => !!id.value && context.can('areas.view')),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    queryFn: ({ signal }) => showArea(id.value, undefined, signal),
   })
 }

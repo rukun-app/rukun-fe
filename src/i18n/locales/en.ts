@@ -351,6 +351,7 @@ const en: Record<string, string> = {
   'Jatuh Tempo': 'Overdue',
   'Tidak Aktif': 'Inactive',
   Diproses: 'Processing',
+  'Simpan perubahan': 'Save changes',
   'Kode wajib diisi': 'Code is required',
   'Nama wilayah wajib diisi': 'Area name is required',
   'Keluarga saya': 'My household',
@@ -360,5 +361,24 @@ const en: Record<string, string> = {
   'Belum ada anggota keluarga': 'No household members yet',
   'Hubungi pengurus untuk melengkapi data keluarga Anda.':
     'Contact your community administrator to complete your household data.',
+  'Kode maksimal 20 karakter': 'Code must be at most 20 characters',
+  'Nama wilayah maksimal 100 karakter': 'Area name must be at most 100 characters',
+  'RW induk tidak tersedia': 'Parent RW unavailable',
+  'Wilayah diperbarui': 'Area updated',
+  'Wilayah dihapus': 'Area deleted',
+  'Hapus wilayah?': 'Delete area?',
+  'Ya, hapus wilayah': 'Yes, delete area',
+  'Kembali ke daftar wilayah': 'Back to areas',
+  'Detail wilayah': 'Area details',
+  'Tinjau informasi RT/RW dan perbarui kode atau namanya.':
+    'Review RT/RW information and update its code or name.',
+  'Muat ulang RW induk': 'Reload parent RW',
+  'Jenis wilayah dan RW induk tidak dapat diubah.': 'Area type and parent RW cannot be changed.',
+  'Informasi wilayah': 'Area information',
+  'Hapus wilayah': 'Delete area',
+  'Wilayah yang masih digunakan tidak dapat dihapus. Penghapusan tidak dapat dibatalkan.':
+    'Areas still in use cannot be deleted. Deletion cannot be undone.',
+  'Perubahan formulir yang belum disimpan akan dibuang jika penghapusan berhasil.':
+    'Unsaved form changes will be discarded if deletion succeeds.',
 }
 export default en

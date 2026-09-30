@@ -995,20 +995,22 @@ memungkinkan.
 
 # Progress Tracker
 
-> **Audit aktual 2026-09-30:** status selesai historis di bawah telah dikoreksi
+> **Audit aktual 2026-10-01:** status selesai historis di bawah telah dikoreksi
 > berdasarkan pemeriksaan source dan browser. FE-0/FE-1 mendapat perbaikan
 > fondasi, FE-2 masih memerlukan verifikasi isolasi scope pada backend nyata.
-> FE-3 tahap 2 menyediakan mutasi dan riwayat keluarga.
+> FE-3 tahap 3 menambahkan detail/edit/hapus wilayah setelah mutasi dan riwayat.
+> Kontrak sementara `FILE_BE/openapi.json` identik dengan snapshot generator.
+> Gap FE-0–FE-3: [review OpenAPI](docs/openapi-review-fe0-fe3.md).
 > Detail: [docs/frontend-audit.md](docs/frontend-audit.md).
 
-> Diperbarui: 2026-09-29
+> Diperbarui: 2026-10-01
 
 | Fase | Nama | Status | Tanggal Selesai |
 |------|------|--------|-----------------|
 | FE-0 | Project Foundation | 🔧 Diperbaiki; verifikasi lokal, CI remote pending | — |
 | FE-1 | UI Foundation & Application Shells | 🔧 UI responsif, tema terang/gelap, ID/EN; shell scoped diuji component | — |
 | FE-2 | Authentication + Context + RBAC | ⚠️ Auth diperbaiki; gate integrasi scoped nyata belum terverifikasi | — |
-| FE-3 | Resident + Household + Area | 🚧 Tahap 2: mutasi dan riwayat keluarga | — |
+| FE-3 | Resident + Household + Area | 🚧 Tahap 3: detail/edit/hapus wilayah; gate FE-3 belum lengkap | — |
 | FE-4 | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai | — |
 | FE-5 | WiFi + Gallon | ⏳ Belum dimulai | — |
 | FE-6 | QRIS / Payment Gateway | ⏳ Belum dimulai | — |
@@ -1019,7 +1021,7 @@ memungkinkan.
 
 ------------------------------------------------------------------------
 
-# PHASE FE-0 --- Project Foundation ✅
+# PHASE FE-0 --- Project Foundation ⚠️ Fondasi lokal tersedia; CI remote pending
 
 Fase ini membangun technical skeleton. Jangan mulai business screen.
 
@@ -1116,7 +1118,7 @@ pnpm test        ✓  2/2 (env smoke test)
 
 ------------------------------------------------------------------------
 
-# PHASE FE-1 --- UI Foundation & Application Shells ✅
+# PHASE FE-1 --- UI Foundation & Application Shells ⚠️ UI tersedia; gap locale/a11y tersisa
 
 ## Scope
 
@@ -1252,7 +1254,7 @@ pnpm build-only  ✓  build sukses, semua auth pages code-split
 
 ------------------------------------------------------------------------
 
-# PHASE FE-3 --- Resident + Household + Area 🚧 Tahap 2
+# PHASE FE-3 --- Resident + Household + Area 🚧 Tahap 3
 
 ## Batas penyerahan FE-3 tahap 1 (2026-09-30)
 
@@ -1289,11 +1291,12 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
   pemisahan query ReferenceSelect, dan katalog opsi domain terpusat.
 - [x] Regression test lifecycle submit, route/unload guard, dropdown dirty,
   serta keyboard/locale Password. Temuan dicatat di docs/component-review.md.
-- [ ] Dashboard warga, profil/account dan notification inbox.
+- [x] Beranda warga: household dan anggota dari context server (fixture; gate scope nyata pending).
+- [ ] Profil/account dan notification inbox.
 - [x] Mutasi membership dan riwayat (FE-3 tahap 2).
 - [ ] Import/export UI dan progress/result.
 - [ ] Scoped role assignment dan reveal/edit data sensitif.
-- [ ] Edit/hapus wilayah.
+- [x] Detail/edit/hapus wilayah (FE-3 tahap 3; mutasi nyata pending).
 - [ ] Verifikasi kontrak context scoped dan gate isolasi RT/RW/Vendor.
 - [ ] Pengumuman (menunggu modul backend).
 - [ ] Uji manual oleh pengguna terhadap akun/backend development.
@@ -1329,6 +1332,54 @@ Verifikasi tahap 2: **52 unit/component test (14 file)** dan **39 E2E Chromium**
 checklist manual dan batas idempotency/backend ada di `docs/membership-stage.md`.
 FE-3 belum selesai seluruhnya; FE-4 belum dimulai. Penyerahan ini berhenti pada
 mutasi + riwayat agar pengguna dapat menguji dahulu.
+
+## Penyerahan FE-3 tahap 3: wilayah (2026-10-01)
+
+- [x] Nama wilayah pada DataTable membuka detail dengan guard `areas.view`.
+- [x] Edit code/name memakai `areas.manage`; schema/payload create/edit bersama,
+  trim, wajib isi, batas 20/100 karakter, tanpa kind/parent_id saat PATCH.
+- [x] Jenis/induk immutable; RW induk dengan nama/kode, fallback tanpa UUID dan retry.
+- [x] Hapus melalui PrimeVue ConfirmDialog, cancel tanpa request, error 403/409/422,
+  form tetap saat gagal, unsaved guard dan duplicate-submit lock.
+- [x] Cache Community dan pilihan referensi dibersihkan setelah sukses; ID/EN,
+  dark mode, mobile dan komponen/query bersama.
+- [x] **57 unit/component test (15 file), 49 E2E Chromium**, typecheck dan build lulus.
+- [ ] Uji edit/hapus data development serta isolasi scope nyata oleh pengguna.
+
+Checklist: [docs/area-stage.md](docs/area-stage.md). FE-4 belum dimulai.
+
+## Gap terverifikasi sampai FE-3 — kontrak sementara 2026-10-01
+
+`FILE_BE/openapi.json` dan `openapi/rukun.json` identik secara semantik:
+**126 path, 155 operasi, 193 schema**, seluruh referensi lokal ter-resolve.
+Snapshot/client tidak perlu diganti. Catatan selesai historis di atas tidak
+menggantikan gate aktual berikut. Matriks endpoint, bukti source dan batas review
+ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
+
+- [ ] FE-0: verifikasi CI remote; konsistensi response/domain invariant.
+- [ ] FE-1/2: sinkronisasi bahasa UI dengan Accept-Language/profil (header kini
+  masih ID); default FE tetap ID. Audit a11y/reuse dan menu placeholder tersisa.
+- [ ] FE-2: form reset password dari token/email; permintaan link sudah tersedia,
+  penyelesaian reset belum. Minimum reset 12 karakter berbeda dari change 8.
+- [ ] FE-2/3: tetapkan transport context aktif dan recovery invalid/revoked;
+  `contexts` **sudah tersedia**, tetapi `X-Rukun-Context` belum dideklarasikan.
+  Uji multi-assignment, cross-RT, RW inheritance, vendor dan revocation nyata.
+- [ ] FE-3: profile/account, password mandiri, email verification, token devices.
+- [ ] FE-3: inbox/unread/read state/preferences; endpoint sudah ada, UI belum.
+- [ ] FE-3: import/export file, progress/poll/cancel, hasil/error/download.
+- [ ] FE-3: provisioning/link/recovery akun dan credential sekali pakai.
+- [ ] FE-3: scoped role assignment (global users.assign-roles), selector referensi.
+- [ ] FE-3: sensitive NIK/KK reveal/edit dengan permission dan no-store.
+- [ ] FE-3: validasi block/house_number max 50, filter RT daftar warga, perapihan
+  beranda warga (tanggal/label/dark mode), uji status KK dengan anggota aktif.
+- [ ] Kontrak: required fields DTO domain, label relasi, replay semantics dan
+  error code context. Search/sort global/total belum didukung; tabel tetap lokal.
+- [ ] Pengumuman: belum ada endpoint, tetap menunggu kontrak backend.
+
+Prioritas tahap selanjutnya: gap auth/context/bahasa → account → inbox →
+population transfer → administrasi Community/sensitive → gate integrasi akhir
+FE-3. Kerjakan satu tahap per penyerahan dengan instruksi pengguna; jangan
+menandai FE-2/FE-3 selesai hanya karena client endpoint sudah generated.
 
 ## Resident
 

@@ -6,13 +6,13 @@ import { useFormSubmission } from '@/shared/composables/useFormSubmission'
 import { computed, ref } from 'vue'
 import { Form, type FormSubmitEvent } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
-import { z } from 'zod'
+import { createAreaSchema, createAreaPayload } from './area'
+import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Column from 'primevue/column'
 import { createArea } from '@/api/generated/endpoints'
-import type { CreateArea } from '@/api/generated/models'
 import { useAreas } from './queries'
 import { MutationErrors } from '@/design-system'
 import { useContextStore } from '@/contexts/stores/context'
@@ -25,42 +25,13 @@ const query = useAreas(cursor)
 const result = computed(() => query.data.value?.data)
 const creating = ref(false)
 const { busy, error, submit } = useFormSubmission()
-const resolver = computed(() =>
-  zodResolver(
-    z
-      .object({
-        kind: z.enum(areaKinds),
-        code: z.string().trim().min(1, tr('Kode wajib diisi')),
-        name: z.string().trim().min(1, tr('Nama wilayah wajib diisi')),
-        parent_id: z.string().optional(),
-      })
-      .superRefine((value, ctx) => {
-        if (value.kind === 'rt' && !z.string().uuid().safeParse(value.parent_id).success)
-          ctx.addIssue({
-            code: 'custom',
-            path: ['parent_id'],
-            message: tr('Pilih RW induk untuk RT'),
-          })
-      }),
-  ),
-)
+const resolver = computed(() => zodResolver(createAreaSchema()))
 
 async function save(event: FormSubmitEvent) {
   await submit(
     event.valid,
     event.values,
-    async (headers) => {
-      const data = event.values
-      await createArea(
-        {
-          kind: data.kind,
-          code: data.code,
-          name: data.name,
-          ...(data.kind === 'rt' ? { parent_id: data.parent_id } : {}),
-        } as CreateArea,
-        { headers },
-      )
-    },
+    (headers) => createArea(createAreaPayload(event.values), { headers }),
     async () => {
       creating.value = false
       await queryClient.invalidateQueries({ queryKey: ['community'] })
@@ -165,19 +136,21 @@ async function save(event: FormSubmitEvent) {
     >
       <Column field="name" sortable :header="tr('NAMA WILAYAH')"
         ><template #body="{ data }"
-          ><span class="table-primary"
+          ><RouterLink
+            v-if="data.public_id"
+            :to="`/manage/areas/${data.public_id}`"
+            class="table-primary"
             ><span class="row-icon" aria-hidden="true"><i class="pi pi-map-marker" /></span
-            >{{ data.name }}</span
-          ></template
+            >{{ data.name }}</RouterLink
+          ><span v-else>{{ data.name }}</span></template
         ></Column
       >
       <Column field="kind" sortable :header="tr('JENIS')"
         ><template #body="{ data }"
-          ><span class="status-chip" :class="{ 'is-active': data.kind === 'rw' }">{{
-            data.kind === 'rw' ? tr('Rukun Warga') : tr('Rukun Tetangga')
-          }}</span></template
-        ></Column
-      >
+          ><Tag
+            :severity="data.kind === 'rw' ? 'success' : 'secondary'"
+            :value="data.kind === 'rw' ? tr('Rukun Warga') : tr('Rukun Tetangga')" /></template
+      ></Column>
       <Column field="code" sortable :header="tr('KODE')" />
     </AppDataTable>
     <p class="field-help mt-4">

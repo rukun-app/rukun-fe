@@ -41,7 +41,7 @@ berisi credential atau token nyata.
 
 ## Status
 
-Perbaikan foundation/auth dan FE-3 tahap 2 tersedia. Context scoped dibaca dari
+Perbaikan foundation/auth dan FE-3 tahap 3 tersedia. Context scoped dibaca dari
 profil backend; menu management/system juga mengikuti permission global server.
 Gate isolasi scope dan pencabutan akses pada backend nyata masih perlu diverifikasi.
 
@@ -53,7 +53,7 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
 bersama implementasi serta hasil unit test. **Penyerahan saat ini: perbaikan
-fondasi/login dan FE-3 tahap 2 (mutasi + riwayat keluarga); FE-3 belum selesai seluruhnya. FE-4 belum dimulai.**
+fondasi/login dan FE-3 tahap 3 (detail/edit/hapus wilayah); FE-3 belum selesai seluruhnya. FE-4 belum dimulai.**
 
 ## Checklist pengujian manual saat ini
 
@@ -83,7 +83,7 @@ akun atau password baru yang dibuat oleh pekerjaan frontend ini.
 
 Yang **belum tersedia** pada tahap FE-3 ini: profil/inbox,
 import/export UI, pengelolaan scoped assignment,
-reveal/edit NIK/KK, serta edit/hapus wilayah. Menu finansial/layanan belum
+reveal/edit NIK/KK. Menu finansial/layanan belum
 ditampilkan sebagai fitur siap pakai.
 
 Tes browser memakai fixture API, sehingga tidak menulis data ke database nyata.
@@ -163,18 +163,41 @@ PrimeVue dan komponen/composable bersama yang sudah direview.
 [Kontrak, batas, dan checklist testing tahap 2](docs/membership-stage.md).
 Tahap ini tidak mencakup import/export ataupun billing.
 
-## Hasil verifikasi — 30 September 2026
+## FE-3 tahap 3: detail, edit, hapus wilayah
 
-| Pemeriksaan                                 | Hasil             |
-| ------------------------------------------- | ----------------- |
-| Install dari lockfile                       | Lulus             |
-| Unit test (Vitest 4, 14 file)               | **52/52 lulus**   |
-| Browser E2E (Chromium)                      | **39/39 lulus**   |
-| TypeScript source Vue dan konfigurasi Node  | Lulus             |
-| ESLint dan Prettier                         | Lulus             |
-| Production build + service worker           | Lulus             |
-| OpenAPI generated-client drift              | Lulus             |
-| Health backend melalui `localhost:5173/api` | HTTP 200, healthy |
+Buka **Wilayah RT/RW → klik nama wilayah**. Akun `areas.view` bisa melihat detail;
+`areas.manage` diperlukan untuk mengubah kode/nama atau menghapus wilayah.
+Jenis dan RW induk tidak dapat diubah sesuai kontrak backend. Penghapusan
+memerlukan konfirmasi; wilayah yang masih dipakai ditolak server dan form tetap
+tersedia ketika request gagal.
+
+[Checklist testing tahap 3](docs/area-stage.md).
+
+## Review kontrak sementara — 1 Oktober 2026
+
+`FILE_BE/openapi.json` identik dengan snapshot `openapi/rukun.json`:
+**126 path, 155 operasi, 193 schema**. Tidak perlu mengganti generated client.
+[Review lengkap FE-0–FE-3](docs/openapi-review-fe0-fe3.md) memetakan endpoint,
+fitur tersedia, kekurangan UI, dan gate integrasi.
+
+Yang utama masih terbuka: transport/revocation context, penyelesaian reset
+password, sinkronisasi bahasa API/profil, account dan inbox, import/export,
+provisioning akun, assignment, serta sensitive reveal/edit. Context server dan
+beranda keluarga sudah tersedia; isolasi scope nyata belum dinyatakan lulus.
+FE-4 tetap belum dimulai.
+
+## Hasil verifikasi — 1 Oktober 2026
+
+| Pemeriksaan                                 | Hasil                   |
+| ------------------------------------------- | ----------------------- |
+| Install dari lockfile                       | Lulus (30 September)    |
+| Unit test (Vitest 4, 15 file)               | **57/57 lulus**         |
+| Browser E2E (Chromium)                      | **49/49 lulus**         |
+| TypeScript source Vue dan konfigurasi Node  | Lulus                   |
+| ESLint dan Prettier                         | Lulus                   |
+| Production build + service worker           | Lulus                   |
+| OpenAPI generated-client drift              | Lulus                   |
+| Health backend melalui `localhost:5173/api` | HTTP 200 (30 September) |
 
 Unit test mencakup session, environment, permission presentation, pembersihan
 cache saat logout/context berubah, error normalization, transport generated API,
@@ -192,6 +215,9 @@ Tes tambahan tahap 2 mencakup validasi payload, konfirmasi/cancel, pindah/akhiri
 keanggotaan, perubahan hubungan dalam KK sama, riwayat cursor/retry, alamat yang
 dibatasi akses, read-only, penolakan 403/409, serta mobile dark/EN.
 
+Tes tambahan tahap 3 mencakup payload immutable, batas panjang, edit, cancel/konfirmasi
+hapus, read-only, backend errors, retry detail/induk, unsaved guard, serta mobile dark/EN.
+
 ## Peta kode
 
 - `src/app`: bootstrap, router, layout, config, dan provider Query.
@@ -200,7 +226,7 @@ dibatasi akses, read-only, penolakan 403/409, serta mobile dark/EN.
   menjadi security boundary.
 - `src/api/generated`: client/types dari OpenAPI; mutator Axios menjaga response
   envelope backend, mengirim bearer token dan request ID, serta membatasi timeout.
-- `src/features/community`: FE-3 tahap 1–2 dan query dengan key context.
+- `src/features/community`: FE-3 tahap 1–3 dan query dengan key context.
 - `src/design-system`: komponen reusable di atas PrimeVue/Aura.
 - `src/i18n`: locale Indonesia; migrasi seluruh copy halaman ke translation key
   masih perlu dilengkapi.
