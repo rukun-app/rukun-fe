@@ -52,8 +52,8 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
-bersama implementasi serta hasil unit test. **Penyerahan saat ini: perbaikan
-fondasi/login dan FE-3 tahap 3 (detail/edit/hapus wilayah); FE-3 belum selesai seluruhnya. FE-4 belum dimulai.**
+bersama implementasi serta hasil unit test. **Penyerahan saat ini: tahap auth/bahasa (reset password + bahasa API),
+setelah FE-3 tahap 3. FE-3 belum selesai seluruhnya; FE-4 belum dimulai.**
 
 ## Checklist pengujian manual saat ini
 
@@ -180,24 +180,40 @@ tersedia ketika request gagal.
 [Review lengkap FE-0–FE-3](docs/openapi-review-fe0-fe3.md) memetakan endpoint,
 fitur tersedia, kekurangan UI, dan gate integrasi.
 
-Yang utama masih terbuka: transport/revocation context, penyelesaian reset
-password, sinkronisasi bahasa API/profil, account dan inbox, import/export,
+Yang utama masih terbuka: transport/revocation context, sinkronisasi locale
+profil, account dan inbox, import/export,
 provisioning akun, assignment, serta sensitive reveal/edit. Context server dan
 beranda keluarga sudah tersedia; isolasi scope nyata belum dinyatakan lulus.
 FE-4 tetap belum dimulai.
 
+## Tahap auth/bahasa: reset password dan locale API
+
+Tautan email `/reset-password?token=…&email=…` kini membuka form PrimeVue dengan
+validasi minimal 12 karakter dan konfirmasi password. Tautan invalid/error backend
+memberi jalur meminta tautan baru. Setelah sukses, sesi/cache lokal dan parameter
+reset pada URL dibersihkan; pengguna login kembali.
+
+`Accept-Language` kini mengikuti pilihan ID/EN pada setiap request, termasuk
+setelah reload; default tetap ID. Penyimpanan locale pada profil server masih
+menunggu tahap account. Recovery tetap dapat dibuka saat sesi lama bermasalah.
+
+[Kontrak, batas, dan checklist testing auth/bahasa](docs/auth-recovery-stage.md).
+Pengiriman email dan reset password backend nyata perlu diuji manual; otomatis
+memakai fixture tanpa mengubah password development.
+
 ## Hasil verifikasi — 1 Oktober 2026
 
-| Pemeriksaan                                 | Hasil                   |
-| ------------------------------------------- | ----------------------- |
-| Install dari lockfile                       | Lulus (30 September)    |
-| Unit test (Vitest 4, 15 file)               | **57/57 lulus**         |
-| Browser E2E (Chromium)                      | **49/49 lulus**         |
-| TypeScript source Vue dan konfigurasi Node  | Lulus                   |
-| ESLint dan Prettier                         | Lulus                   |
-| Production build + service worker           | Lulus                   |
-| OpenAPI generated-client drift              | Lulus                   |
-| Health backend melalui `localhost:5173/api` | HTTP 200 (30 September) |
+| Pemeriksaan                                 | Hasil                                        |
+| ------------------------------------------- | -------------------------------------------- |
+| Install dari lockfile                       | Lulus (30 September)                         |
+| Unit test (Vitest 4, 17 file)               | **67/67 lulus**                              |
+| Browser E2E (Chromium)                      | **58/58 lulus**                              |
+| TypeScript source Vue dan konfigurasi Node  | Lulus                                        |
+| ESLint dan Prettier                         | Lulus                                        |
+| Production build + service worker           | Lulus                                        |
+| OpenAPI generated-client drift              | Lulus                                        |
+| Health backend melalui `localhost:5173/api` | HTTP 200 (30 September)                      |
+| Bahasa backend melalui `/api/locales`       | HTTP 200, Content-Language ID/EN (1 Oktober) |
 
 Unit test mencakup session, environment, permission presentation, pembersihan
 cache saat logout/context berubah, error normalization, transport generated API,
@@ -217,6 +233,11 @@ dibatasi akses, read-only, penolakan 403/409, serta mobile dark/EN.
 
 Tes tambahan tahap 3 mencakup payload immutable, batas panjang, edit, cancel/konfirmasi
 hapus, read-only, backend errors, retry detail/induk, unsaved guard, serta mobile dark/EN.
+
+Tambahan tahap auth/bahasa: parsing link, minimum/konfirmasi password, payload,
+sesi lama, error/reset sukses, header locale, dan persistensi pilihan. Unit suite
+lulus dengan `pnpm test --maxWorkers=2`; percobaan worker default sempat timeout
+saat proses paralel. Browser memakai build preview: **58/58 lulus**.
 
 ## Peta kode
 

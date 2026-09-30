@@ -1357,10 +1357,13 @@ menggantikan gate aktual berikut. Matriks endpoint, bukti source dan batas revie
 ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
 
 - [ ] FE-0: verifikasi CI remote; konsistensi response/domain invariant.
-- [ ] FE-1/2: sinkronisasi bahasa UI dengan Accept-Language/profil (header kini
-  masih ID); default FE tetap ID. Audit a11y/reuse dan menu placeholder tersisa.
-- [ ] FE-2: form reset password dari token/email; permintaan link sudah tersedia,
-  penyelesaian reset belum. Minimum reset 12 karakter berbeda dari change 8.
+- [x] FE-1/2: Accept-Language mengikuti locale UI tiap request; default ID,
+  persistensi lokal dan fallback saat storage gagal teruji.
+- [ ] FE-1/2: sinkronisasi locale profil pada tahap account; audit a11y/reuse
+  dan menu placeholder tersisa.
+- [x] FE-2: form reset token/email, alias tautan email, validasi minimal 12,
+  konfirmasi, error/retry, sukses dan login ulang; minimum change tetap 8.
+- [ ] FE-2: uji pengiriman email dan reset password development nyata.
 - [ ] FE-2/3: tetapkan transport context aktif dan recovery invalid/revoked;
   `contexts` **sudah tersedia**, tetapi `X-Rukun-Context` belum dideklarasikan.
   Uji multi-assignment, cross-RT, RW inheritance, vendor dan revocation nyata.
@@ -1376,10 +1379,31 @@ ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
   error code context. Search/sort global/total belum didukung; tabel tetap lokal.
 - [ ] Pengumuman: belum ada endpoint, tetap menunggu kontrak backend.
 
-Prioritas tahap selanjutnya: gap auth/context/bahasa → account → inbox →
+Prioritas tahap selanjutnya: gap context/integrasi → account dan locale profil → inbox →
 population transfer → administrasi Community/sensitive → gate integrasi akhir
 FE-3. Kerjakan satu tahap per penyerahan dengan instruksi pengguna; jangan
 menandai FE-2/FE-3 selesai hanya karena client endpoint sudah generated.
+
+## Penyerahan tahap auth/bahasa (2026-10-01)
+
+Pengguna memilih menutup reset password + bahasa API sebelum billing.
+
+- [x] Route publik `/reset-password` dan `/auth/reset-password` menerima token/email
+  sesuai tautan backend, tanpa bergantung pada hydration sesi lama.
+- [x] PrimeVue Form/Password dan helper submission/error bersama; Zod min. 12,
+  konfirmasi cocok, payload whitelist, request rangkap dikunci.
+- [x] Error invalid/expired/used/rate limit/outage tetap memberi jalur meminta
+  tautan baru; sukses membersihkan sesi/cache dan token/email URL aktif.
+- [x] Login/forgot/reset tidak mengirim bearer/context lama. Request protected
+  mempertahankan auth/scope. Header bahasa mengikuti UI secara dinamis.
+- [x] **67/67 unit test (17 file, --maxWorkers=2), 58/58 E2E Chromium**;
+  typecheck, lint dan production build lulus. Locale backend development
+  diverifikasi lewat GET /api/locales (HTTP 200, Content-Language ID/EN).
+- [ ] Integrasi email/reset nyata, locale profil, serta gate context belum ditutup.
+
+Checklist: [docs/auth-recovery-stage.md](docs/auth-recovery-stage.md).
+FE-3 belum selesai seluruhnya; FE-4 belum dimulai. Penyerahan berhenti pada
+reset password + bahasa API untuk pengujian pengguna.
 
 ## Resident
 

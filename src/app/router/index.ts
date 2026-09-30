@@ -44,6 +44,13 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: false, title: 'Lupa Password' },
       },
       {
+        path: 'reset-password',
+        alias: '/reset-password',
+        name: 'auth.reset-password',
+        component: () => import('@/auth/pages/ResetPasswordPage.vue'),
+        meta: { requiresAuth: false, title: 'Reset Kata Sandi' },
+      },
+      {
         path: 'change-initial-password',
         name: 'auth.change-initial-password',
         component: () => import('@/auth/pages/ChangeInitialPasswordPage.vue'),
@@ -296,7 +303,13 @@ export const router = createRouter({
 // mustChangePassword guard: forces change-password screen before anything else.
 router.beforeEach(async (to) => {
   const requiresAuth = to.meta.requiresAuth === true
-  if (to.name === 'auth.session-error') return
+  // Email recovery must remain usable even when an existing session cannot hydrate.
+  if (
+    to.name === 'auth.session-error' ||
+    to.name === 'auth.reset-password' ||
+    to.name === 'auth.forgot-password'
+  )
+    return
   await ensureSession()
   if (session.isAuthenticated() && hydrationError.value) return { name: 'auth.session-error' }
   const isAuthenticated = session.isAuthenticated()

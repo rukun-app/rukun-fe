@@ -87,12 +87,12 @@ terhadap snapshot versioned, bukan polling backend live pada setiap CI run.
 ## Hasil penyerahan tahap ini
 
 Pada Node 24: typecheck aplikasi/config, lint, format,
-production build, dan OpenAPI drift check lulus. Vitest: **57 unit/component test / 15 file
-lulus**. Playwright Chromium: **49 test lulus**. Login dan dashboard mobile
+production build, dan OpenAPI drift check lulus. Vitest: **67 unit/component test / 17 file
+lulus**. Playwright Chromium: **58 test lulus**. Login dan dashboard mobile
 juga diperiksa secara visual dari screenshot browser.
 
 Sesuai arahan pengguna, pekerjaan berhenti pada perbaikan foundation/auth dan
-FE-3 tahap 3 untuk testing manual. Pengembangan bagian FE-3 berikutnya maupun
+tahap auth/bahasa setelah FE-3 tahap 3 untuk testing manual. Pengembangan bagian FE-3 berikutnya maupun
 FE-4 memerlukan instruksi lanjutan pengguna. Tidak ada klaim seluruh fase selesai.
 
 ## Penyempurnaan tahap 1: referensi dan preferensi UI
@@ -136,8 +136,21 @@ Hierarchy tidak dapat diubah; penghapusan memakai konfirmasi dan penolakan backe
 tidak menghilangkan data/form. Checklist ada di [catatan wilayah](area-stage.md).
 
 Gap prioritas sampai FE-3: recovery context/revocation dan kontrak transport,
-reset password sampai selesai, sinkronisasi locale API/profil, account, inbox,
+sinkronisasi locale profil, account, inbox,
 import/export, provisioning akun, scoped assignment, sensitive data dan gate
 integrasi nyata. Rincian dan prioritas ada di [review OpenAPI](openapi-review-fe0-fe3.md).
 Install frozen lockfile dan health backend terakhir diperiksa 30 September;
 tidak diklaim diulang pada review kontrak 1 Oktober.
+
+## Tahap auth/bahasa setelah FE-3 tahap 3
+
+Reset token/email dari tautan backend sudah punya UI dengan validasi min. 12,
+error/retry, sesi lokal dibersihkan hanya setelah sukses, serta URL credential
+reset dibersihkan. Recovery publik tidak terhalang sesi lama. Accept-Language
+mengikuti UI ID/EN setiap request; endpoint auth publik tidak membawa bearer/context
+lama. Lihat [checklist auth/bahasa](auth-recovery-stage.md).
+Locale profil server, email/reset nyata dan gate context/scoped masih pending.
+
+Verifikasi tahap auth/bahasa: 67/67 unit (17 file, `--maxWorkers=2`), 58/58
+E2E Chromium, typecheck, lint dan build lulus. GET `/api/locales` development
+mengembalikan Content-Language ID/EN sesuai header. Tidak ada reset akun nyata.

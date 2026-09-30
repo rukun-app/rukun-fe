@@ -380,5 +380,15 @@ const en: Record<string, string> = {
     'Areas still in use cannot be deleted. Deletion cannot be undone.',
   'Perubahan formulir yang belum disimpan akan dibuang jika penghapusan berhasil.':
     'Unsaved form changes will be discarded if deletion succeeds.',
+  'Reset Kata Sandi': 'Reset Password',
+  'Buat kata sandi baru untuk akun pada tautan email Anda.':
+    'Set a new password for the account in your email link.',
+  'Kata sandi berhasil direset. Silakan masuk kembali dengan kata sandi baru.':
+    'Password reset successfully. Sign in again with your new password.',
+  'Tautan reset tidak lengkap atau tidak valid. Minta tautan baru melalui email.':
+    'The reset link is incomplete or invalid. Request a new link by email.',
+  'Kata sandi minimal 12 karakter': 'Password must contain at least 12 characters',
+  'Minta tautan reset baru': 'Request a new reset link',
+  'Kembali ke halaman masuk': 'Back to sign in',
 }
 export default en
