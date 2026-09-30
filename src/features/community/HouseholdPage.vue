@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
+import ReferenceSelect from './ReferenceSelect.vue'
 import { createIntentKey } from '@/shared/utils/idempotency'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
@@ -41,13 +43,13 @@ watch(id, () => {
   error.value = null
 })
 onBeforeRouteLeave(
-  () => !dirty.value || window.confirm('Perubahan belum disimpan. Tinggalkan halaman?'),
+  () => !dirty.value || window.confirm(tr('Perubahan belum disimpan. Tinggalkan halaman?')),
 )
 const resolver = computed(() =>
   zodResolver(
     z.object({
-      area_id: editing.value ? z.string().optional() : z.string().uuid('UUID RT wajib valid'),
-      address: z.string().trim().min(1, 'Alamat wajib diisi').max(2000),
+      area_id: editing.value ? z.string().optional() : z.string().uuid(tr('Pilih wilayah RT')),
+      address: z.string().trim().min(1, tr('Alamat wajib diisi')).max(2000),
       block: z.string().nullable().optional(),
       house_number: z.string().nullable().optional(),
       occupancy_status: z.enum(['occupied', 'vacant', 'rented', 'other']),
@@ -93,17 +95,17 @@ async function save(event: FormSubmitEvent) {
 <template>
   <section class="page-container">
     <RouterLink to="/manage/households" class="back-link"
-      ><i class="pi pi-arrow-left" aria-hidden="true" /> Kembali ke daftar KK</RouterLink
-    >
+      ><i class="pi pi-arrow-left" aria-hidden="true" /> {{ tr('Kembali ke daftar KK') }}
+    </RouterLink>
     <div class="page-heading">
       <div>
-        <span class="eyebrow">DATA KELUARGA</span>
-        <h2>{{ editing ? 'Detail Kartu Keluarga' : 'Tambah Kartu Keluarga' }}</h2>
+        <span class="eyebrow"> {{ tr('DATA KELUARGA') }} </span>
+        <h2>{{ editing ? tr('Detail Kartu Keluarga') : tr('Tambah Kartu Keluarga') }}</h2>
         <p>
           {{
             editing
-              ? 'Tinjau dan perbarui informasi rumah tangga.'
-              : 'Catat rumah tangga sebagai bagian dari lingkungan Anda.'
+              ? tr('Tinjau dan perbarui informasi rumah tangga.')
+              : tr('Catat rumah tangga sebagai bagian dari lingkungan Anda.')
           }}
         </p>
       </div>
@@ -128,64 +130,68 @@ async function save(event: FormSubmitEvent) {
         <div class="form-panel-heading">
           <span class="row-icon"><i class="pi pi-home" aria-hidden="true" /></span>
           <div>
-            <h3>Informasi rumah tangga</h3>
-            <p>Kolom bertanda * wajib diisi.</p>
+            <h3>{{ tr('Informasi rumah tangga') }}</h3>
+            <p>{{ tr('Kolom bertanda * wajib diisi.') }}</p>
           </div>
         </div>
         <MutationErrors :error="error" />
         <fieldset :disabled="busy || !context.can('households.manage')" class="form-fields">
           <div v-if="!editing" class="form-field full-width">
-            <label for="area"
-              >UUID wilayah RT <span class="required" aria-hidden="true">*</span></label
-            ><InputText
-              id="area"
+            <label for="area">
+              {{ tr('Wilayah RT') }} <span class="required" aria-hidden="true">*</span></label
+            ><ReferenceSelect
+              input-id="area"
+              resource="rt"
+              :label="tr('Pilih wilayah RT')"
               name="area_id"
-              placeholder="Masukkan ID wilayah RT"
               :invalid="!!$form.area_id?.invalid"
+              :disabled="busy"
+              @change="dirty = true"
             /><small class="text-red-700">{{ $form.area_id?.error?.message }}</small
-            ><small class="field-help">Gunakan ID RT yang tersedia pada halaman Wilayah.</small>
+            ><small class="field-help"> {{ tr('Pilih RT tempat keluarga tinggal.') }} </small>
           </div>
           <div class="form-field full-width">
-            <label for="address">Alamat <span class="required" aria-hidden="true">*</span></label
+            <label for="address">
+              {{ tr('Alamat') }} <span class="required" aria-hidden="true">*</span></label
             ><InputText
               id="address"
               name="address"
-              placeholder="Contoh: Jalan Melati Raya"
+              :placeholder="tr('Contoh: Jalan Melati Raya')"
               :invalid="!!$form.address?.invalid"
             /><small class="text-red-700">{{ $form.address?.error?.message }}</small>
           </div>
           <div class="form-field">
-            <label for="block">Blok</label
-            ><InputText id="block" name="block" placeholder="Contoh: A" />
+            <label for="block"> {{ tr('Blok') }} </label
+            ><InputText id="block" name="block" :placeholder="tr('Contoh: A')" />
           </div>
           <div class="form-field">
-            <label for="number">Nomor rumah</label
-            ><InputText id="number" name="house_number" placeholder="Contoh: 12" />
+            <label for="number"> {{ tr('Nomor rumah') }} </label
+            ><InputText id="number" name="house_number" :placeholder="tr('Contoh: 12')" />
           </div>
           <div class="form-field">
-            <label for="occupancy">Hunian</label
+            <label for="occupancy"> {{ tr('Hunian') }} </label
             ><Select
               input-id="occupancy"
               name="occupancy_status"
               :options="[
-                { label: 'Dihuni', value: 'occupied' },
-                { label: 'Kosong', value: 'vacant' },
-                { label: 'Disewakan', value: 'rented' },
-                { label: 'Lainnya', value: 'other' },
+                { label: tr('Dihuni'), value: 'occupied' },
+                { label: tr('Kosong'), value: 'vacant' },
+                { label: tr('Disewakan'), value: 'rented' },
+                { label: tr('Lainnya'), value: 'other' },
               ]"
               option-label="label"
               option-value="value"
             />
           </div>
           <div v-if="editing" class="form-field">
-            <label for="status">Status</label
+            <label for="status"> {{ tr('Status') }} </label
             ><Select
               input-id="status"
               name="status"
               :options="[
-                { label: 'Aktif', value: 'active' },
-                { label: 'Pindah', value: 'moved' },
-                { label: 'Tidak aktif', value: 'inactive' },
+                { label: tr('Aktif'), value: 'active' },
+                { label: tr('Pindah'), value: 'moved' },
+                { label: tr('Tidak aktif'), value: 'inactive' },
               ]"
               option-label="label"
               option-value="value"
@@ -193,25 +199,29 @@ async function save(event: FormSubmitEvent) {
           </div>
         </fieldset>
         <div v-if="context.can('households.manage')" class="form-actions">
-          <RouterLink to="/manage/households" class="text-xs text-surface-500 mr-2"
-            >Batal</RouterLink
-          ><Button type="submit" label="Simpan KK" icon="pi pi-check" :loading="busy" />
+          <RouterLink to="/manage/households" class="text-xs text-surface-500 mr-2">
+            {{ tr('Batal') }} </RouterLink
+          ><Button type="submit" :label="tr('Simpan KK')" icon="pi pi-check" :loading="busy" />
         </div>
       </Form>
       <aside class="form-note">
         <i class="pi pi-info-circle" aria-hidden="true" />
-        <h3>Rumah untuk setiap keluarga</h3>
+        <h3>{{ tr('Rumah untuk setiap keluarga') }}</h3>
         <p>
-          Pastikan alamat dan wilayah RT sudah sesuai. Data ini menjadi dasar pendataan anggota
-          keluarga.
+          {{
+            tr(
+              'Pastikan alamat dan wilayah RT sudah sesuai. Data ini menjadi dasar pendataan anggota keluarga.',
+            )
+          }}
         </p>
         <RouterLink
           v-if="editing && context.can('residents.view')"
           :to="{ path: '/manage/residents', query: { household: id } }"
-          >Lihat anggota keluarga
+        >
+          {{ tr('Lihat anggota keluarga') }}
           <i class="pi pi-arrow-right ml-1" aria-hidden="true" /></RouterLink
-        ><RouterLink v-else-if="context.can('areas.view')" to="/manage/areas"
-          >Lihat daftar wilayah <i class="pi pi-arrow-right ml-1" aria-hidden="true"
+        ><RouterLink v-else-if="context.can('areas.view')" to="/manage/areas">
+          {{ tr('Lihat daftar wilayah') }} <i class="pi pi-arrow-right ml-1" aria-hidden="true"
         /></RouterLink>
       </aside>
     </div>

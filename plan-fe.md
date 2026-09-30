@@ -1006,7 +1006,7 @@ memungkinkan.
 | Fase | Nama | Status | Tanggal Selesai |
 |------|------|--------|-----------------|
 | FE-0 | Project Foundation | 🔧 Diperbaiki; verifikasi lokal, CI remote pending | — |
-| FE-1 | UI Foundation & Application Shells | 🔧 Perbaikan komponen, tema, mobile; audit seluruh shell pending | — |
+| FE-1 | UI Foundation & Application Shells | 🔧 UI responsif, tema terang/gelap, ID/EN; shell scoped diuji component | — |
 | FE-2 | Authentication + Context + RBAC | ⚠️ Auth diperbaiki; kontrak context scoped BE belum tersedia | — |
 | FE-3 | Resident + Household + Area | 🚧 Tahap awal pengelolaan KK/warga/wilayah | — |
 | FE-4 | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai | — |
@@ -1262,7 +1262,23 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
 - [x] Dashboard pengurus dengan menu sesuai permission global aktual.
 - [x] Daftar/detail/tambah/ubah Household.
 - [x] Daftar/detail/tambah/ubah Resident; tautan anggota dari Household.
-- [x] Daftar/tambah RW/RT; UUID wilayah/Household masih diinput manual.
+- [x] Daftar/tambah RW/RT; select RW induk, RT untuk KK, dan KK untuk warga.
+- [x] Select referensi memakai generated API, pencarian lokal, cursor load-more,
+  label nama/kode/alamat, initial KK via detail, error/retry, dan capability read.
+- [x] Filter daftar KK memakai select RT.
+- [x] Seluruh tabel tahap berjalan memakai `AppDataTable` reusable berbasis
+  PrimeVue: toolbar/search lokal, sort lokal, striped rows, scroll, states,
+  retry, penghitung halaman, dan opaque cursor pagination terpusat.
+- [x] Kolom KK mengutamakan alamat/blok/nomor/hunian, warga memakai nama/HP;
+  referensi internal tidak ditampilkan. Nama kepala keluarga menunggu DTO backend.
+- [x] Component test tabel bersama dan E2E kolom manusiawi, search/sort,
+  mobile, dark mode, serta EN. Search/sort global menunggu dukungan API.
+- [x] Dark mode tersedia pada auth dan shell management/system/resident/vendor;
+  pilihan tersimpan, tema awal mengikuti sistem.
+- [x] Bahasa ID/EN untuk UI tahap berjalan, default ID, tersimpan di browser,
+  atribut html lang dan tanggal mengikuti pilihan. Data backend tidak diterjemahkan.
+- [x] Unit/component test referensi dan preferensi seluruh shell; E2E payload
+  select, pagination RW, preselected KK, retry, dark mode/locale setelah reload.
 - [x] Cursor pagination, query key context, cache cleanup, loading/error/empty.
 - [x] PrimeVue Forms + Zod, backend field errors, duplicate-submit protection,
   idempotency key stabil untuk retry payload yang sama.
@@ -1276,11 +1292,13 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
 - [ ] Uji manual oleh pengguna terhadap akun/backend development.
 
 FE-3 belum ditandai selesai. FE-4 dan fase berikutnya belum dimulai.
-Verifikasi lokal 2026-09-30: **20/20 unit test (6 file)** dan **15/15 E2E
+Verifikasi lokal 2026-09-30: **39/39 unit/component test (10 file)** dan **26/26 E2E
 Chromium** lulus. TypeScript aplikasi/config, lint, format, production build,
 install frozen lockfile, dan OpenAPI drift check lulus. E2E memakai fixture
-kontrak; login/CRUD akun nyata, multi-scope backend, CI remote, serta testing
-manual pengguna belum diverifikasi. Checklist manual ada di README.
+kontrak. Login/pembacaan daftar akun development diperiksa pada iterasi UI;
+CRUD akun nyata, multi-scope backend, CI remote, serta testing manual pengguna
+belum diverifikasi. Shell warga/vendor diuji lewat component test. Checklist
+select, tema, dan bahasa tersedia di README. FE-3 tahap 1 tetap menjadi batas penyerahan.
 
 Hasil automated test dan batas integrasi dicatat di README dan audit frontend.
 

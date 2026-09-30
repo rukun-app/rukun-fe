@@ -67,14 +67,14 @@ oleh pekerjaan frontend ini.
    ganti password harus muncul sebelum halaman bisnis.
 3. Jika tersedia lebih dari satu pilihan akses, pilih **Pengelolaan lingkungan**.
 4. Buka **Wilayah** (`/manage/areas`): lihat daftar dan buat RW/RT jika berwenang.
-   Untuk RT, masukkan UUID RW induk yang ditampilkan di daftar.
-5. Buka **Kartu Keluarga** (`/manage/households`): tambah KK memakai UUID RT;
-   buka detail, ubah alamat/blok/nomor/hunian, dan simpan. UUID masih dimasukkan
-   manual pada tahap awal ini.
+   Untuk RT, pilih **RW induk** berdasarkan nama/kode. Select hanya menampilkan RW.
+5. Buka **Kartu Keluarga** (`/manage/households`): tambah KK dengan memilih **wilayah RT**;
+   buka detail, ubah alamat/blok/nomor/hunian, dan simpan.
 6. Dari detail KK, pilih **Lihat anggota keluarga**, lalu **Tambah warga**.
-   Nama wajib diisi; nomor HP/tanggal lahir opsional. Coba ubah data warga dan
+   KK terisi otomatis beserta referensi/alamatnya. Dari form tambah warga langsung,
+   pilih KK melalui select. Nama wajib diisi; nomor HP/tanggal lahir opsional. Coba ubah data warga dan
    pastikan perubahan tersimpan setelah reload.
-7. Coba filter UUID RT, halaman berikut/sebelumnya, input kosong, dan respons
+7. Coba filter nama RT, halaman berikut/sebelumnya, input kosong, dan respons
    validasi dari backend. Error harus tampil; NIK/KK tidak diambil otomatis.
 8. Coba akun hanya-baca: tombol tambah/simpan harus dibatasi; direct URL tambah
    harus menampilkan halaman akses tidak tersedia.
@@ -90,13 +90,56 @@ ditampilkan sebagai fitur siap pakai.
 Tes browser memakai fixture API, sehingga tidak menulis data ke database nyata.
 Pengujian manual CRUD di atas memang menulis data development.
 
+## Select referensi, tema, dan bahasa
+
+- Form RT memilih RW induk; form KK memilih RT; form warga memilih KK melalui
+  nama/kode atau referensi/alamat. UUID tetap menjadi payload internal API.
+- Pencarian select bekerja pada pilihan yang sudah dimuat. Gunakan **Muat pilihan
+  berikutnya** untuk mengambil halaman berikutnya (50 record per request).
+  Data kosong, izin daftar tidak tersedia, dan kegagalan request ditampilkan;
+  request gagal dapat dicoba lagi. Izin baca wilayah/KK diperlukan sesuai referensi.
+- Tombol matahari/bulan dan pilihan **ID / EN** tersedia di login/pilih akses serta
+  shell pengurus, sistem, warga, dan vendor. Bahasa default **Indonesia (`id`)**;
+  tema awal mengikuti sistem. Pilihan manual tersimpan di browser dan bertahan
+  setelah reload/logout. Preferensi tidak mengubah hak akses atau data backend.
+- Terjemahan mencakup navigasi, formulir, status, validasi lokal, dan empty state
+  pada halaman yang sudah tersedia. Nama/alamat data backend dan pesan validasi
+  bebas dari backend tetap ditampilkan sesuai respons aslinya.
+
+Tambahan checklist: ganti ID → EN, aktifkan mode gelap, reload, lalu buka form
+KK/warga dan pilih akses lain. Coba kembali ke ID/terang, tampilan ponsel,
+select kosong, pilihan di halaman berikutnya, dan retry saat jaringan gagal.
+Fitur fase selanjutnya tetap belum dikerjakan.
+
+## DataTable bersama
+
+Semua tabel yang tersedia (KK, warga, wilayah) menggunakan `AppDataTable` dari
+`@/design-system`, berbasis PrimeVue DataTable. Toolbar, pencarian, loading,
+empty/error + retry, jumlah baris termuat, scroll horizontal, dan cursor pagination
+berada dalam satu komponen. Halaman fitur hanya menentukan kolom, pencarian pada
+field yang relevan, filter bisnis, dan query. Tabel fitur baru mengikuti pola ini.
+
+- KK: alamat sebagai tautan detail, hunian, blok/nomor, status. Nama kepala keluarga
+  belum tersedia pada DTO daftar backend; referensi teknis tidak dijadikan identitas tampilan.
+- Warga: nama, nomor HP, status, aksi detail. Kolom referensi internal dihapus.
+- Wilayah: nama, jenis RW/RT, dan kode wilayah yang dipahami pengurus.
+- Klik judul kolom yang memiliki ikon sort; gunakan **Cari di halaman ini** untuk
+  mencari alamat/nama/kode/telepon sesuai tabel. Pencarian dan sort hanya berlaku
+  pada halaman cursor yang dimuat, serta direset ketika halaman/filter server berubah.
+  API belum menyediakan pencarian/sort global dan total baris; UI tidak mengarang total.
+
+Checklist: cari lalu hapus pencarian, coba kata yang tidak cocok, urutkan kolom,
+pindah cursor, buka detail dari alamat/nama, serta cek tabel pada ponsel, dark mode,
+dan EN. Tes komponen mencakup slot kolom, search/sort/reset, opaque cursor,
+loading/error/empty/retry; tes browser memastikan referensi internal tidak tampil.
+
 ## Hasil verifikasi — 30 September 2026
 
 | Pemeriksaan                                 | Hasil             |
 | ------------------------------------------- | ----------------- |
 | Install dari lockfile                       | Lulus             |
-| Unit test (Vitest 4, 6 file)                | **20/20 lulus**   |
-| Browser E2E (Chromium)                      | **15/15 lulus**   |
+| Unit test (Vitest 4, 10 file)               | **39/39 lulus**   |
+| Browser E2E (Chromium)                      | **26/26 lulus**   |
 | TypeScript source Vue dan konfigurasi Node  | Lulus             |
 | ESLint dan Prettier                         | Lulus             |
 | Production build + service worker           | Lulus             |
@@ -107,10 +150,14 @@ Unit test mencakup session, environment, permission presentation, pembersihan
 cache saat logout/context berubah, error normalization, transport generated API,
 dan idempotency retry. E2E mencakup login email/HP, redirect, forced password
 change, sesi kedaluwarsa, outage/retry, reset email, akses terbatas, CRUD KK,
-cursor pagination, validasi server, dan layout mobile.
+cursor pagination, validasi server, dan layout mobile. Tambahan tes mencakup
+filter jenis referensi, RW pada halaman berikutnya, KK terpilih di luar halaman
+pertama, retry select, persistensi bahasa/tema, dan kontrol preferensi di semua shell.
 
-E2E memakai fixture kontrak, **belum merupakan validasi login/CRUD dengan akun
-nyata atau multi-scope backend**. CI remote dan uji manual pengguna masih pending.
+E2E memakai fixture kontrak. Login akun development dan pembacaan daftar backend
+nyata telah diperiksa pada iterasi UI; CRUD nyata dan multi-scope backend belum
+divalidasi. Shell warga/vendor diperiksa lewat component test karena kontrak
+context scoped belum tersedia. CI remote dan uji manual pengguna masih pending.
 
 ## Peta kode
 

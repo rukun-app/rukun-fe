@@ -1,5 +1,5 @@
 // Bahasa Indonesia — default locale
-// ponytail: add English (en) when multi-language support is needed
+// Existing semantic messages; current UI copy is translated through tr() in ../index.ts.
 const id = {
   common: {
     loading: 'Memuat...',

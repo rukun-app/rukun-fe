@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import { ref, computed } from 'vue'
@@ -66,9 +67,13 @@ async function submit() {
       >
         <i class="pi pi-lock text-primary-600 dark:text-primary-400 text-xl" />
       </div>
-      <h1 class="text-xl font-bold text-surface-900 dark:text-surface-0">Buat Kata Sandi Baru</h1>
+      <h1 class="text-xl font-bold text-surface-900 dark:text-surface-0">
+        {{ tr('Buat Kata Sandi Baru') }}
+      </h1>
       <p class="text-surface-500 mt-1 text-sm">
-        Akun Anda menggunakan kata sandi sementara. Buat kata sandi baru untuk melanjutkan.
+        {{
+          tr('Akun Anda menggunakan kata sandi sementara. Buat kata sandi baru untuk melanjutkan.')
+        }}
       </p>
     </div>
 
@@ -87,14 +92,14 @@ async function submit() {
           for="current_password"
           class="text-sm font-medium text-surface-700 dark:text-surface-200"
         >
-          Kata Sandi Sementara
+          {{ tr('Kata Sandi Sementara') }}
         </label>
         <InputText
           id="current_password"
           v-model="form.current_password"
           type="password"
           autocomplete="current-password"
-          placeholder="••••••••"
+          :placeholder="tr('••••••••')"
           :invalid="!!error?.fieldErrors['current_password']"
           :disabled="loading"
           class="w-full"
@@ -107,7 +112,7 @@ async function submit() {
       <!-- New password -->
       <div class="flex flex-col gap-1">
         <label for="password" class="text-sm font-medium text-surface-700 dark:text-surface-200">
-          Kata Sandi Baru
+          {{ tr('Kata Sandi Baru') }}
         </label>
         <div class="relative">
           <InputText
@@ -115,14 +120,14 @@ async function submit() {
             v-model="form.password"
             :type="showNew ? 'text' : 'password'"
             autocomplete="new-password"
-            placeholder="Minimal 8 karakter"
+            :placeholder="tr('Minimal 8 karakter')"
             :invalid="!!error?.fieldErrors['password']"
             :disabled="loading"
             class="w-full pr-10"
           />
           <button
             type="button"
-            :aria-label="showNew ? 'Sembunyikan' : 'Tampilkan'"
+            :aria-label="showNew ? tr('Sembunyikan') : tr('Tampilkan')"
             :aria-pressed="showNew"
             class="absolute inset-y-0 right-3 flex items-center text-surface-400 hover:text-surface-600 focus-visible:outline-none"
             @click="showNew = !showNew"
@@ -141,7 +146,7 @@ async function submit() {
           for="password_confirmation"
           class="text-sm font-medium text-surface-700 dark:text-surface-200"
         >
-          Konfirmasi Kata Sandi Baru
+          {{ tr('Konfirmasi Kata Sandi Baru') }}
         </label>
         <div class="relative">
           <InputText
@@ -149,14 +154,14 @@ async function submit() {
             v-model="form.password_confirmation"
             :type="showConfirm ? 'text' : 'password'"
             autocomplete="new-password"
-            placeholder="••••••••"
+            :placeholder="tr('••••••••')"
             :invalid="mismatch"
             :disabled="loading"
             class="w-full pr-10"
           />
           <button
             type="button"
-            :aria-label="showConfirm ? 'Sembunyikan' : 'Tampilkan'"
+            :aria-label="showConfirm ? tr('Sembunyikan') : tr('Tampilkan')"
             :aria-pressed="showConfirm"
             class="absolute inset-y-0 right-3 flex items-center text-surface-400 hover:text-surface-600 focus-visible:outline-none"
             @click="showConfirm = !showConfirm"
@@ -164,12 +169,14 @@ async function submit() {
             <i :class="showConfirm ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
           </button>
         </div>
-        <small v-if="mismatch" class="text-red-600 dark:text-red-400">Kata sandi tidak cocok</small>
+        <small v-if="mismatch" class="text-red-600 dark:text-red-400">
+          {{ tr('Kata sandi tidak cocok') }}
+        </small>
       </div>
 
       <Button
         type="submit"
-        label="Simpan Kata Sandi"
+        :label="tr('Simpan Kata Sandi')"
         :loading="loading"
         :disabled="!canSubmit"
         class="w-full"

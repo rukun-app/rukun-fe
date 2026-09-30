@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import Skeleton from 'primevue/skeleton'
 
 /**
@@ -17,7 +18,7 @@ withDefaults(
 </script>
 
 <template>
-  <div aria-busy="true" aria-label="Memuat..." role="status">
+  <div aria-busy="true" :aria-label="tr('Memuat...')" role="status">
     <!-- Card variant -->
     <div v-if="variant === 'card'" class="rounded-xl border border-surface-200 p-4 space-y-3">
       <Skeleton height="1rem" width="60%" />

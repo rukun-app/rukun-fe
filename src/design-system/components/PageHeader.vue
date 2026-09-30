@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 defineProps<{
   title: string
   backTo?: string
@@ -11,7 +12,7 @@ defineProps<{
       v-if="backTo"
       :to="backTo"
       class="p-2 -ml-2 rounded-lg hover:bg-surface-100 text-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-      aria-label="Kembali"
+      :aria-label="tr('Kembali')"
     >
       <i class="pi pi-arrow-left text-sm" aria-hidden="true" />
     </RouterLink>

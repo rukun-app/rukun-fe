@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Drawer from 'primevue/drawer'
@@ -19,14 +20,14 @@ const pageTitle = computed(() =>
 </script>
 <template>
   <div class="management-shell">
-    <a class="skip-link" href="#main-content">Lewati ke konten</a>
-    <aside class="desktop-sidebar" aria-label="Sidebar navigasi"><ManagementNav /></aside>
+    <a class="skip-link" href="#main-content"> {{ tr('Lewati ke konten') }} </a>
+    <aside class="desktop-sidebar" :aria-label="tr('Sidebar navigasi')"><ManagementNav /></aside>
     <Drawer
       v-model:visible="mobileOpen"
-      header="Menu lingkungan"
-      aria-label="Menu lingkungan"
+      :header="tr('Menu lingkungan')"
+      :aria-label="tr('Menu lingkungan')"
       @after-hide="menuTrigger?.focus()"
-      :close-button-props="{ 'aria-label': 'Tutup menu navigasi' }"
+      :close-button-props="{ 'aria-label': tr('Tutup menu navigasi') }"
       class="mobile-navigation"
       :pt="{ content: { style: 'padding: 0; display: flex; flex-direction: column;' } }"
       ><ManagementNav @navigate="mobileOpen = false"
@@ -37,21 +38,21 @@ const pageTitle = computed(() =>
           type="button"
           ref="menuTrigger"
           class="mobile-menu-button"
-          aria-label="Buka menu navigasi"
+          :aria-label="tr('Buka menu navigasi')"
           :aria-expanded="mobileOpen"
           @click="mobileOpen = true"
         >
           <i class="pi pi-bars" aria-hidden="true" />
         </button>
         <div class="workspace-breadcrumb">
-          <span>Lingkungan</span><i class="pi pi-angle-right" aria-hidden="true" />
-          <h1>{{ pageTitle }}</h1>
+          <span> {{ tr('Lingkungan') }} </span><i class="pi pi-angle-right" aria-hidden="true" />
+          <h1>{{ tr(pageTitle) }}</h1>
         </div>
         <SessionActions />
       </header>
       <main id="main-content" class="workspace-main" tabindex="-1"><RouterView /></main>
       <footer class="workspace-footer">
-        <span>Dirawat bersama. Tumbuh bersama.</span
+        <span> {{ tr('Dirawat bersama. Tumbuh bersama.') }} </span
         ><span>Rukun <i class="pi pi-sparkles" aria-hidden="true" /></span>
       </footer>
     </div>

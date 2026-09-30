@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import SessionActions from '@/auth/components/SessionActions.vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
 
@@ -17,23 +18,23 @@ function isActive(path: string) {
 </script>
 
 <template>
-  <div class="vendor-shell flex flex-col min-h-svh bg-surface-50">
+  <div class="vendor-shell flex flex-col min-h-svh bg-surface-50 dark:bg-surface-950">
     <!-- Topbar -->
     <header
-      class="sticky top-0 z-30 bg-surface-0 border-b border-surface-200 px-4 py-3 flex items-center gap-4"
+      class="sticky top-0 z-30 bg-surface-0 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 px-4 py-3 flex items-center gap-4"
     >
-      <span class="text-primary-600 font-bold text-base">Rukun Vendor</span>
-      <nav class="flex gap-1 flex-1" aria-label="Navigasi vendor">
+      <span class="text-primary-600 font-bold text-base"> {{ tr('Rukun Vendor') }} </span>
+      <nav class="flex gap-1 flex-1" :aria-label="tr('Navigasi vendor')">
         <RouterLink
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-surface-600 hover:bg-surface-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-surface-600 dark:text-surface-300 hover:bg-surface-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           :class="{ 'bg-primary-50 text-primary-700 font-medium': isActive(item.to) }"
           :aria-current="isActive(item.to) ? 'page' : undefined"
         >
           <i :class="[item.icon, 'text-sm']" aria-hidden="true" />
-          <span class="hidden sm:inline">{{ item.label }}</span>
+          <span class="hidden sm:inline">{{ tr(item.label) }}</span>
         </RouterLink>
       </nav>
       <SessionActions />

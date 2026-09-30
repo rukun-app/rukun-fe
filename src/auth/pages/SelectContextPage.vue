@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 /**
  * SelectContextPage — shown when user is authenticated but has no active context,
  * or navigated to a shell that doesn't match the current active context type.
@@ -32,20 +33,23 @@ async function onSwitched() {
 <template>
   <div class="auth-page access-page">
     <div class="auth-page-heading">
-      <span class="eyebrow">SATU AKUN, BERBAGAI PERAN</span>
-      <h1>Pilih ruang Anda.</h1>
-      <p>Pilih akses untuk melanjutkan.<br />Anda dapat berganti akses kapan saja.</p>
+      <span class="eyebrow"> {{ tr('SATU AKUN, BERBAGAI PERAN') }} </span>
+      <h1>{{ tr('Pilih ruang Anda.') }}</h1>
+      <p>
+        {{ tr('Pilih akses untuk melanjutkan.') }} <br />
+        {{ tr('Anda dapat berganti akses kapan saja.') }}
+      </p>
     </div>
     <div v-if="!hasContexts" role="status" class="access-empty">
       <i class="pi pi-lock" aria-hidden="true" />
       <p>
-        Tidak ada akses yang tersedia untuk akun ini.<br />Hubungi administrator untuk mendapatkan
-        akses.
+        {{ tr('Tidak ada akses yang tersedia untuk akun ini.') }} <br />
+        {{ tr('Hubungi administrator untuk mendapatkan akses.') }}
       </p>
     </div>
     <ContextSwitcher v-else @switched="onSwitched" />
     <Button
-      label="Keluar"
+      :label="tr('Keluar')"
       icon="pi pi-sign-out"
       severity="secondary"
       text

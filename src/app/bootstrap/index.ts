@@ -1,3 +1,4 @@
+import { initializeTheme } from '@/shared/preferences/theme'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
@@ -15,6 +16,8 @@ import { primeVueConfig } from '@/design-system/theme/preset'
 import '@/assets/main.css'
 
 export function bootstrap(): void {
+  initializeTheme()
+  document.documentElement.lang = i18n.global.locale.value
   const app = createApp(App)
 
   const pinia = createPinia()

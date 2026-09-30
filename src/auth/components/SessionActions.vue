@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
+import DisplayPreferences from '@/app/components/DisplayPreferences.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Menu from 'primevue/menu'
@@ -18,20 +20,21 @@ const initials = computed(() =>
 )
 const items = computed(() => [
   {
-    label: 'Ganti akses',
+    label: tr('Ganti akses'),
     icon: 'pi pi-arrow-right-arrow-left',
     command: () => router.push('/auth/select-context'),
   },
   { separator: true },
-  { label: 'Keluar', icon: 'pi pi-sign-out', disabled: loading.value, command: logout },
+  { label: tr('Keluar'), icon: 'pi pi-sign-out', disabled: loading.value, command: logout },
 ])
 </script>
 <template>
   <div class="account-actions">
+    <DisplayPreferences />
     <button
       type="button"
       class="account-trigger"
-      aria-label="Menu akun"
+      :aria-label="tr('Menu akun')"
       aria-haspopup="menu"
       aria-controls="account-menu"
       :disabled="loading"

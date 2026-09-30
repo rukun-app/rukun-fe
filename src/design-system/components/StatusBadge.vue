@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 /**
  * StatusBadge — maps a string status to a visual badge.
  * Colors are semantic; never rely on color alone (always show text).
@@ -39,6 +40,6 @@ const current = () => config[props.status]
       current().cls,
     ]"
   >
-    {{ label ?? current().defaultLabel }}
+    {{ tr(label ?? current().defaultLabel) }}
   </span>
 </template>

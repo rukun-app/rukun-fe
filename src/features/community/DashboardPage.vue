@@ -1,15 +1,18 @@
 <script setup lang="ts">
+import { tr, i18n } from '@/i18n'
 import { computed } from 'vue'
 import { session } from '@/auth/stores/session'
 import { useContextStore } from '@/contexts/stores/context'
 import NeighborhoodArt from '@/app/components/NeighborhoodArt.vue'
 const context = useContextStore()
-const date = new Intl.DateTimeFormat('id-ID', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-}).format(new Date())
+const date = computed(() =>
+  new Intl.DateTimeFormat(i18n.global.locale.value === 'en' ? 'en-GB' : 'id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date()),
+)
 const cards = computed(() =>
   [
     {
@@ -71,34 +74,39 @@ const steps = computed(() =>
   <section class="page-container dashboard-page">
     <div class="dashboard-greeting">
       <div>
-        <p class="eyebrow">RUANG PENGURUS</p>
-        <h2>Selamat datang, {{ session.getUser()?.name }}</h2>
+        <p class="eyebrow">{{ tr('RUANG PENGURUS') }}</p>
+        <h2>{{ tr('Selamat datang,') }} {{ session.getUser()?.name }}</h2>
       </div>
       <span class="date-label"><i class="pi pi-calendar" aria-hidden="true" />{{ date }}</span>
     </div>
     <div class="dashboard-hero">
       <div class="hero-copy">
-        <span class="hero-pill"><span class="small-dot" /> Bersama membangun lingkungan</span>
-        <h3>Lingkungan tertata.<br /><em>Warga terhubung.</em></h3>
+        <span class="hero-pill"
+          ><span class="small-dot" /> {{ tr('Bersama membangun lingkungan') }}
+        </span>
+        <h3>
+          {{ tr('Lingkungan tertata.') }} <br /><em> {{ tr('Warga terhubung.') }} </em>
+        </h3>
         <p>
-          Mulai dari data yang rapi untuk membuat<br class="hidden lg:block" />
-          urusan bertetangga jadi lebih mudah.
+          {{ tr('Mulai dari data yang rapi untuk membuat') }} <br class="hidden lg:block" />
+          {{ tr('urusan bertetangga jadi lebih mudah.') }}
         </p>
         <RouterLink
           v-if="context.can('households.view')"
           to="/manage/households"
           class="hero-action"
-          >Kelola data keluarga <i class="pi pi-arrow-up-right" aria-hidden="true"
+        >
+          {{ tr('Kelola data keluarga') }} <i class="pi pi-arrow-up-right" aria-hidden="true"
         /></RouterLink>
       </div>
       <NeighborhoodArt />
     </div>
     <div class="section-heading">
       <div>
-        <h3>Data lingkungan</h3>
-        <p>Semua yang Anda perlukan untuk pendataan sehari-hari.</p>
+        <h3>{{ tr('Data lingkungan') }}</h3>
+        <p>{{ tr('Semua yang Anda perlukan untuk pendataan sehari-hari.') }}</p>
       </div>
-      <span class="subtle-label">PENGELOLAAN</span>
+      <span class="subtle-label"> {{ tr('PENGELOLAAN') }} </span>
     </div>
     <div class="dashboard-cards">
       <RouterLink
@@ -111,26 +119,26 @@ const steps = computed(() =>
           <span class="module-icon"><i :class="card.icon" aria-hidden="true" /></span
           ><i class="pi pi-arrow-up-right module-arrow" aria-hidden="true" />
         </div>
-        <h3>{{ card.title }}</h3>
-        <p>{{ card.description }}</p>
+        <h3>{{ tr(card.title) }}</h3>
+        <p>{{ tr(card.description) }}</p>
         <span class="module-card-link"
-          >{{ card.action }} <i class="pi pi-arrow-right" aria-hidden="true" /></span
+          >{{ tr(card.action) }} <i class="pi pi-arrow-right" aria-hidden="true" /></span
       ></RouterLink>
     </div>
     <div class="onboarding-panel">
       <div class="onboarding-heading">
         <span class="guide-icon"><i class="pi pi-compass" aria-hidden="true" /></span>
         <div>
-          <h3>Mulai dari mana?</h3>
-          <p>Ikuti alur pendataan lingkungan berikut.</p>
+          <h3>{{ tr('Mulai dari mana?') }}</h3>
+          <p>{{ tr('Ikuti alur pendataan lingkungan berikut.') }}</p>
         </div>
       </div>
       <div class="onboarding-steps">
         <RouterLink v-for="step in steps" :key="step.number" :to="step.to"
           ><span class="step-number">{{ step.number }}</span>
           <div>
-            <strong>{{ step.title }}</strong>
-            <p>{{ step.detail }}</p>
+            <strong>{{ tr(step.title) }}</strong>
+            <p>{{ tr(step.detail) }}</p>
           </div>
           <i class="pi pi-angle-right" aria-hidden="true"
         /></RouterLink>

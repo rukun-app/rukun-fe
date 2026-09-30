@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import { ref, computed } from 'vue'
@@ -20,9 +21,15 @@ async function submit() {
 <template>
   <div class="auth-page">
     <div class="auth-page-heading">
-      <span class="eyebrow">SELAMAT DATANG DI RUKUN</span>
-      <h1>Senang bertemu<br />Anda kembali.</h1>
-      <p>Masuk untuk mengelola dan terhubung<br />dengan lingkungan Anda.</p>
+      <span class="eyebrow"> {{ tr('SELAMAT DATANG DI RUKUN') }} </span>
+      <h1>
+        {{ tr('Senang bertemu') }} <br />
+        {{ tr('Anda kembali.') }}
+      </h1>
+      <p>
+        {{ tr('Masuk untuk mengelola dan terhubung') }} <br />
+        {{ tr('dengan lingkungan Anda.') }}
+      </p>
     </div>
 
     <form class="auth-form" novalidate @submit.prevent="submit">
@@ -38,14 +45,14 @@ async function submit() {
       <!-- Identifier -->
       <div class="flex flex-col gap-1">
         <label for="identifier" class="text-sm font-medium text-surface-700 dark:text-surface-200">
-          Email / Nomor HP
+          {{ tr('Email / Nomor HP') }}
         </label>
         <InputText
           id="identifier"
           v-model="form.identifier"
           autocomplete="username"
           inputmode="email"
-          placeholder="email@contoh.com atau 08xx"
+          :placeholder="tr('email@contoh.com atau 08xx')"
           :invalid="!!fieldError['identifier']"
           :disabled="loading"
           class="w-full"
@@ -59,13 +66,13 @@ async function submit() {
       <div class="flex flex-col gap-1">
         <div class="flex items-center justify-between">
           <label for="password" class="text-sm font-medium text-surface-700 dark:text-surface-200">
-            Kata Sandi
+            {{ tr('Kata Sandi') }}
           </label>
           <RouterLink
             to="/auth/forgot-password"
             class="text-xs text-primary-600 dark:text-primary-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
-            Lupa kata sandi?
+            {{ tr('Lupa kata sandi?') }}
           </RouterLink>
         </div>
         <div class="relative">
@@ -74,14 +81,14 @@ async function submit() {
             v-model="form.password"
             :type="showPassword ? 'text' : 'password'"
             autocomplete="current-password"
-            placeholder="••••••••"
+            :placeholder="tr('••••••••')"
             :invalid="!!fieldError['password']"
             :disabled="loading"
             class="w-full pr-10"
           />
           <button
             type="button"
-            :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+            :aria-label="showPassword ? tr('Sembunyikan kata sandi') : tr('Tampilkan kata sandi')"
             :aria-pressed="showPassword"
             class="absolute inset-y-0 right-3 flex items-center text-surface-400 hover:text-surface-600 focus-visible:outline-none"
             @click="showPassword = !showPassword"
@@ -96,7 +103,7 @@ async function submit() {
 
       <Button
         type="submit"
-        label="Masuk"
+        :label="tr('Masuk')"
         icon="pi pi-arrow-right"
         icon-pos="right"
         :loading="loading"
@@ -105,8 +112,8 @@ async function submit() {
       />
     </form>
     <p class="auth-help">
-      <i class="pi pi-info-circle" aria-hidden="true" /> Belum punya akun? Hubungi pengurus RT/RW
-      Anda.
+      <i class="pi pi-info-circle" aria-hidden="true" />
+      {{ tr('Belum punya akun? Hubungi pengurus RT/RW Anda.') }}
     </p>
   </div>
 </template>

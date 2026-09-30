@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
+import ReferenceSelect from './ReferenceSelect.vue'
 import { createIntentKey } from '@/shared/utils/idempotency'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
@@ -37,15 +39,15 @@ const dirty = ref(false)
 const error = ref<NormalizedApiError | null>(null)
 const intentKey = createIntentKey()
 onBeforeRouteLeave(
-  () => !dirty.value || window.confirm('Perubahan belum disimpan. Tinggalkan halaman?'),
+  () => !dirty.value || window.confirm(tr('Perubahan belum disimpan. Tinggalkan halaman?')),
 )
 const resolver = computed(() =>
   zodResolver(
     z.object({
       household_id: editing.value
         ? z.string().nullable().optional()
-        : z.string().uuid('UUID KK wajib valid'),
-      name: z.string().trim().min(1, 'Nama wajib diisi').max(100),
+        : z.string().uuid(tr('Pilih kartu keluarga')),
+      name: z.string().trim().min(1, tr('Nama wajib diisi')).max(100),
       phone: z.string().nullable().optional(),
       birth_date: z.string().nullable().optional(),
       relationship: z.enum(['head', 'spouse', 'child', 'parent', 'other']),
@@ -90,17 +92,17 @@ async function save(event: FormSubmitEvent) {
 <template>
   <section class="page-container">
     <RouterLink to="/manage/residents" class="back-link"
-      ><i class="pi pi-arrow-left" aria-hidden="true" /> Kembali ke daftar warga</RouterLink
-    >
+      ><i class="pi pi-arrow-left" aria-hidden="true" /> {{ tr('Kembali ke daftar warga') }}
+    </RouterLink>
     <div class="page-heading">
       <div>
-        <span class="eyebrow">DATA WARGA</span>
-        <h2>{{ editing ? 'Detail Warga' : 'Tambah Warga' }}</h2>
+        <span class="eyebrow"> {{ tr('DATA WARGA') }} </span>
+        <h2>{{ editing ? tr('Detail Warga') : tr('Tambah Warga') }}</h2>
         <p>
           {{
             editing
-              ? 'Tinjau dan perbarui informasi warga yang terdaftar.'
-              : 'Kenali setiap warga, mulai dari data yang tepat.'
+              ? tr('Tinjau dan perbarui informasi warga yang terdaftar.')
+              : tr('Kenali setiap warga, mulai dari data yang tepat.')
           }}
         </p>
       </div>
@@ -125,71 +127,80 @@ async function save(event: FormSubmitEvent) {
         <div class="form-panel-heading">
           <span class="row-icon"><i class="pi pi-user" aria-hidden="true" /></span>
           <div>
-            <h3>Informasi warga</h3>
-            <p>Kolom bertanda * wajib diisi.</p>
+            <h3>{{ tr('Informasi warga') }}</h3>
+            <p>{{ tr('Kolom bertanda * wajib diisi.') }}</p>
           </div>
         </div>
         <MutationErrors :error="error" />
         <fieldset :disabled="busy || !context.can('residents.manage')" class="form-fields">
           <div v-if="!editing" class="form-field full-width">
-            <label for="household"
-              >UUID kartu keluarga <span class="required" aria-hidden="true">*</span></label
-            ><InputText
-              id="household"
+            <label for="household">
+              {{ tr('Kartu keluarga') }} <span class="required" aria-hidden="true">*</span></label
+            ><ReferenceSelect
+              input-id="household"
+              resource="household"
+              :label="tr('Pilih kartu keluarga')"
+              :selected-id="String(initial.household_id || '')"
               name="household_id"
-              placeholder="ID keluarga tempat warga terdaftar"
               :invalid="!!$form.household_id?.invalid"
+              :disabled="busy"
+              @change="dirty = true"
             /><small class="text-red-700">{{ $form.household_id?.error?.message }}</small
-            ><small class="field-help"
-              >Tambahkan warga dari detail KK agar keluarga terisi otomatis.</small
-            >
+            ><small class="field-help">
+              {{ tr('Tambahkan warga dari detail KK agar keluarga terisi otomatis.') }}
+            </small>
           </div>
           <div class="form-field full-width">
-            <label for="name">Nama lengkap <span class="required" aria-hidden="true">*</span></label
+            <label for="name">
+              {{ tr('Nama lengkap') }} <span class="required" aria-hidden="true">*</span></label
             ><InputText
               id="name"
               name="name"
-              placeholder="Nama lengkap warga"
+              :placeholder="tr('Nama lengkap warga')"
               :invalid="!!$form.name?.invalid"
             /><small class="text-red-700">{{ $form.name?.error?.message }}</small>
           </div>
           <div class="form-field">
-            <label for="phone">Nomor HP warga</label
-            ><InputText id="phone" name="phone" type="tel" placeholder="08xxxxxxxxxx" /><small
-              class="field-help"
-              >Nomor kontak warga, bukan perubahan nomor login.</small
-            >
+            <label for="phone"> {{ tr('Nomor HP warga') }} </label
+            ><InputText
+              id="phone"
+              name="phone"
+              type="tel"
+              :placeholder="tr('08xxxxxxxxxx')"
+            /><small class="field-help">
+              {{ tr('Nomor kontak warga, bukan perubahan nomor login.') }}
+            </small>
           </div>
           <div class="form-field">
-            <label for="birth">Tanggal lahir</label
+            <label for="birth"> {{ tr('Tanggal lahir') }} </label
             ><InputText id="birth" name="birth_date" type="date" />
           </div>
           <div v-if="!editing" class="form-field">
-            <label for="relationship">Hubungan keluarga</label
+            <label for="relationship"> {{ tr('Hubungan keluarga') }} </label
             ><Select
               input-id="relationship"
               name="relationship"
               :options="[
-                { label: 'Kepala keluarga', value: 'head' },
-                { label: 'Pasangan', value: 'spouse' },
-                { label: 'Anak', value: 'child' },
-                { label: 'Orang tua', value: 'parent' },
-                { label: 'Lainnya', value: 'other' },
+                { label: tr('Kepala keluarga'), value: 'head' },
+                { label: tr('Pasangan'), value: 'spouse' },
+                { label: tr('Anak'), value: 'child' },
+                { label: tr('Orang tua'), value: 'parent' },
+                { label: tr('Lainnya'), value: 'other' },
               ]"
               option-label="label"
               option-value="value"
             />
           </div>
           <div v-if="editing" class="form-field">
-            <label for="status">Status</label
+            <label for="status"> {{ tr('Status') }} </label
             ><Select
               input-id="status"
               name="status"
               :options="[
-                { label: 'Aktif', value: 'active' },
-                { label: 'Pindah', value: 'moved' },
-                { label: 'Meninggal', value: 'deceased' },
-                { label: 'Tidak aktif', value: 'inactive' },
+                { label: tr('Aktif'), value: 'active' },
+                { label: tr('Pindah'), value: 'moved' },
+                { label: tr('Meninggal'), value: 'deceased' },
+                { label: tr('Tidak aktif'), value: 'inactive' },
               ]"
               option-label="label"
               option-value="value"
@@ -197,18 +208,22 @@ async function save(event: FormSubmitEvent) {
           </div>
         </fieldset>
         <div v-if="context.can('residents.manage')" class="form-actions">
-          <RouterLink to="/manage/residents" class="text-xs text-surface-500 mr-2">Batal</RouterLink
-          ><Button type="submit" label="Simpan warga" icon="pi pi-check" :loading="busy" />
+          <RouterLink to="/manage/residents" class="text-xs text-surface-500 mr-2">
+            {{ tr('Batal') }} </RouterLink
+          ><Button type="submit" :label="tr('Simpan warga')" icon="pi pi-check" :loading="busy" />
         </div>
       </Form>
       <aside class="form-note">
         <i class="pi pi-shield" aria-hidden="true" />
-        <h3>Data warga, tanggung jawab bersama</h3>
+        <h3>{{ tr('Data warga, tanggung jawab bersama') }}</h3>
         <p>
-          Isi data sesuai informasi warga. Nomor HP dan tanggal lahir boleh dikosongkan jika belum
-          tersedia.
+          {{
+            tr(
+              'Isi data sesuai informasi warga. Nomor HP dan tanggal lahir boleh dikosongkan jika belum tersedia.',
+            )
+          }}
         </p>
-        <p class="mt-3">Hubungan keluarga tidak mengubah hak akses akun.</p>
+        <p class="mt-3">{{ tr('Hubungan keluarga tidak mengubah hak akses akun.') }}</p>
       </aside>
     </div>
   </section>

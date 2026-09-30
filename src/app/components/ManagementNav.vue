@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useContextStore } from '@/contexts/stores/context'
@@ -28,28 +29,33 @@ const items = computed(() =>
 <template>
   <div class="sidebar-content">
     <RouterLink to="/manage/dashboard" class="sidebar-brand" @click="emit('navigate')"
-      ><BrandMark /><span>Ruang kelola lingkungan</span></RouterLink
+      ><BrandMark /><span> {{ tr('Ruang kelola lingkungan') }} </span></RouterLink
     >
-    <div class="sidebar-section-label">MENU UTAMA</div>
-    <nav aria-label="Menu manajemen" class="sidebar-nav">
+    <div class="sidebar-section-label">{{ tr('MENU UTAMA') }}</div>
+    <nav :aria-label="tr('Menu manajemen')" class="sidebar-nav">
       <RouterLink
         v-for="item in items"
         :key="item.to"
         :to="item.to"
         :aria-current="route.path.startsWith(item.to) ? 'page' : undefined"
         @click="emit('navigate')"
-        ><i :class="item.icon" aria-hidden="true" /><span>{{ item.label }}</span
+        ><i :class="item.icon" aria-hidden="true" /><span>{{ tr(item.label) }}</span
         ><span v-if="route.path.startsWith(item.to)" class="nav-dot"
       /></RouterLink>
     </nav>
     <div class="sidebar-bottom">
       <div class="sidebar-note">
         <i class="pi pi-heart" aria-hidden="true" />
-        <p>Lingkungan yang baik<br />dimulai dari kita.</p>
+        <p>
+          {{ tr('Lingkungan yang baik') }} <br />
+          {{ tr('dimulai dari kita.') }}
+        </p>
       </div>
       <RouterLink to="/auth/select-context" class="context-link" @click="emit('navigate')"
         ><span class="context-icon"><i class="pi pi-building" aria-hidden="true" /></span
-        ><span><strong>Ruang pengurus</strong><small>Ganti akses</small></span
+        ><span
+          ><strong> {{ tr('Ruang pengurus') }} </strong
+          ><small> {{ tr('Ganti akses') }} </small></span
         ><i class="pi pi-angle-right" aria-hidden="true"
       /></RouterLink>
     </div>

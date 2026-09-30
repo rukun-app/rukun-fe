@@ -72,8 +72,9 @@ dengan mock production atau perhitungan bisnis di frontend.
 
 E2E menggunakan response fixtures yang mengikuti schema backend, tanpa membuat
 akun/transaksi pada database development. Health check melalui proxy `/api`
-dilakukan ke backend live. Login menggunakan akun nyata dan validasi multi-scope
-backend belum dilakukan; tidak sama dengan pengujian integrasi penuh.
+dilakukan ke backend live. Login akun development dan GET daftar telah diperiksa pada iterasi UI. CRUD
+nyata dan validasi multi-scope backend belum dilakukan; ini belum merupakan
+pengujian integrasi penuh.
 
 Client generated harus dihasilkan kembali dengan `pnpm api:generate` setiap
 snapshot kontrak diperbarui, kemudian `pnpm api:check`. Check ini mendeteksi drift
@@ -82,10 +83,28 @@ terhadap snapshot versioned, bukan polling backend live pada setiap CI run.
 ## Hasil penyerahan tahap ini
 
 Pada Node 24: install frozen lockfile, typecheck aplikasi/config, lint, format,
-production build, dan OpenAPI drift check lulus. Vitest: **20 test / 6 file
-lulus**. Playwright Chromium: **15 test lulus**. Login dan dashboard mobile
+production build, dan OpenAPI drift check lulus. Vitest: **39 unit/component test / 10 file
+lulus**. Playwright Chromium: **26 test lulus**. Login dan dashboard mobile
 juga diperiksa secara visual dari screenshot browser.
 
 Sesuai arahan pengguna, pekerjaan berhenti pada perbaikan foundation/auth dan
 FE-3 tahap 1 untuk testing manual. Pengembangan bagian FE-3 berikutnya maupun
 FE-4 memerlukan instruksi lanjutan pengguna. Tidak ada klaim seluruh fase selesai.
+
+## Penyempurnaan tahap 1: referensi dan preferensi UI
+
+UUID manual diganti select RW/RT/KK dengan label, pencarian pada data termuat,
+cursor load-more, dan retry. ID tetap dikirim melalui DTO generated. Tema gelap
+dan bahasa ID/EN (default ID) tersedia pada auth dan semua shell; preferensi
+tersimpan di localStorage tanpa menyimpan data referensi. Browser fixture menguji
+management/system/auth; component test mencakup shell warga/vendor karena
+backend belum mengekspor context scoped. Fase berikutnya belum dimulai.
+
+## Konsolidasi DataTable
+
+Tabel KK/warga/wilayah memakai AppDataTable bersama dari design system. Kolom
+referensi teknis tidak ditampilkan; identitas KK menggunakan alamat yang tersedia
+di DTO, warga menggunakan nama. Search dan sort terbatas halaman cursor dan
+berlabel eksplisit; backend belum menyediakan search/sort global maupun total.
+Tidak ada request per baris untuk menebak kepala keluarga. Test mencakup reusable
+states, slots, search/sort reset, pagination, dan keterbacaan kolom di browser.

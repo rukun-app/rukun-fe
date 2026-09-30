@@ -21,6 +21,17 @@ const permissions = [
 ]
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/community/areas?*', (route) =>
+    route.fulfill({
+      json: {
+        success: true,
+        data: {
+          data: [{ public_id: areaId, kind: 'rt', name: 'RT Melati', code: '01' }],
+          next_cursor: null,
+        },
+      },
+    }),
+  )
   await page.addInitScript(() => localStorage.setItem('rukun:token', 'test-token'))
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({
@@ -47,7 +58,7 @@ test('household list follows opaque cursor and displays authorized details', asy
     })
   })
   await page.goto('/manage/households')
-  await expect(page.getByRole('link', { name: 'KK-001', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Jalan Melati 1', exact: true })).toBeVisible()
   await expect(page.getByText('Jalan Melati 1')).toBeVisible()
   await page.getByRole('button', { name: 'Berikutnya' }).click()
   await expect(page.getByText('Belum ada KK', { exact: true })).toBeVisible()
@@ -73,7 +84,8 @@ test('household creation validates and sends the backend contract with idempoten
   await page.getByRole('button', { name: 'Simpan KK' }).click()
   await expect(page.getByText('Alamat wajib diisi')).toBeVisible()
   expect(submitted).toBeUndefined()
-  await page.getByLabel('UUID wilayah RT').fill(areaId)
+  await page.getByRole('combobox', { name: 'Pilih wilayah RT' }).click()
+  await page.getByRole('option', { name: 'RT Melati · 01' }).click()
   await page.getByRole('textbox', { name: 'Alamat', exact: true }).fill('Jalan Melati 1')
   await page.getByRole('button', { name: 'Simpan KK' }).click()
   await expect(page).toHaveURL(/\/manage\/households$/)
@@ -212,4 +224,187 @@ test('mobile household form keeps fields and actions inside viewport', async ({ 
     true,
   )
   await page.screenshot({ path: 'e2e/artifacts/household-form-mobile.png', fullPage: true })
+})
+
+test('RT form selects only RW parents across cursor pages', async ({ page }) => {
+  const rwId = '30000000-0000-4000-8000-000000000001'
+  let submitted: Record<string, unknown> | undefined
+  await page.route('**/api/community/areas?*', (route) => {
+    const next = new URL(route.request().url()).searchParams.get('cursor')
+    return route.fulfill({
+      json: {
+        success: true,
+        data: {
+          data: next
+            ? [{ public_id: rwId, kind: 'rw', name: 'RW Mawar', code: '03' }]
+            : [{ public_id: areaId, kind: 'rt', name: 'RT Melati', code: '01' }],
+          next_cursor: next ? null : 'next-rw',
+        },
+      },
+    })
+  })
+  await page.route('**/api/community/areas', (route) => {
+    submitted = route.request().postDataJSON()
+    return route.fulfill({ json: { success: true, data: { public_id: areaId, ...submitted } } })
+  })
+  await page.goto('/manage/areas')
+  await page.getByRole('button', { name: 'Tambah wilayah' }).click()
+  await page.locator('#kind').click()
+  await page.getByRole('option', { name: 'Rukun Tetangga (RT)', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Kode' }).fill('02')
+  await page.getByRole('textbox', { name: 'Nama wilayah' }).fill('RT Baru')
+  await page.getByRole('combobox', { name: 'Pilih RW induk' }).click()
+  await expect(page.getByRole('option', { name: 'RT Melati · 01' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Muat pilihan berikutnya' }).click()
+  await page.getByRole('option', { name: 'RW Mawar · 03' }).click()
+  await page.getByRole('button', { name: 'Simpan wilayah' }).click()
+  await expect.poll(() => submitted).toMatchObject({ kind: 'rt', parent_id: rwId, name: 'RT Baru' })
+})
+
+test('resident form resolves a preselected household outside the first page', async ({ page }) => {
+  let submitted: Record<string, unknown> | undefined
+  await page.route('**/api/community/households?*', (route) =>
+    route.fulfill({ json: { success: true, data: { data: [], next_cursor: null } } }),
+  )
+  await page.route(`**/api/community/households/${householdId}`, (route) =>
+    route.fulfill({ json: { success: true, data: household } }),
+  )
+  await page.route('**/api/community/residents?*', (route) =>
+    route.fulfill({ json: { success: true, data: { data: [] } } }),
+  )
+  await page.route('**/api/community/residents', (route) => {
+    submitted = route.request().postDataJSON()
+    return route.fulfill({
+      json: { success: true, data: { public_id: 'resident-id', ...submitted } },
+    })
+  })
+  await page.goto(`/manage/residents/new?household=${householdId}`)
+  await expect(page.getByRole('combobox', { name: 'Pilih kartu keluarga' })).toContainText(
+    'KK-001 · Jalan Melati 1',
+  )
+  await page.getByRole('textbox', { name: 'Nama lengkap', exact: true }).fill('Warga Baru')
+  await page.getByRole('button', { name: 'Simpan warga' }).click()
+  await expect(page).toHaveURL(/\/manage\/residents$/)
+  expect(submitted).toMatchObject({
+    household_id: householdId,
+    name: 'Warga Baru',
+    relationship: 'other',
+  })
+})
+
+test('reference errors offer retry and recover into named choices', async ({ page }) => {
+  let failing = true
+  await page.route('**/api/community/areas?*', (route) =>
+    route.fulfill(
+      failing
+        ? { status: 403, json: { message: 'Unavailable' } }
+        : {
+            json: {
+              success: true,
+              data: { data: [{ public_id: areaId, kind: 'rt', name: 'RT Melati' }] },
+            },
+          },
+    ),
+  )
+  await page.goto('/manage/households/new')
+  await expect(page.getByRole('alert')).toContainText('Pilihan gagal dimuat.')
+  failing = false
+  await page.getByRole('button', { name: 'Coba lagi' }).click()
+  await page.getByRole('combobox', { name: 'Pilih wilayah RT' }).click()
+  await expect(page.getByRole('option', { name: 'RT Melati' })).toBeVisible()
+})
+
+test('language and dark theme persist through reload and apply to forms', async ({ page }) => {
+  await page.goto('/manage/dashboard')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'id')
+  await page.getByRole('button', { name: 'Aktifkan mode gelap' }).click()
+  await page.getByRole('combobox', { name: 'Bahasa', exact: true }).selectOption('en')
+  await expect(page.getByRole('heading', { name: 'Welcome, Test' })).toBeVisible()
+  await page.reload()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await page.goto('/manage/households/new')
+  await expect(page.getByRole('heading', { name: 'Add Household', exact: true })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Choose RT area' })).toBeVisible()
+  await page.getByRole('button', { name: 'Save household' }).click()
+  await expect(page.getByText('Address is required')).toBeVisible()
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.screenshot({ path: 'e2e/artifacts/household-dark-en.png', fullPage: true })
+  await page.getByRole('button', { name: 'Use light mode' }).click()
+  await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('id')
+  await expect(page.getByRole('button', { name: 'Simpan KK' })).toBeVisible()
+  await expect(page.locator('html')).not.toHaveClass(/dark/)
+})
+
+test('household DataTable uses addresses, supports search and sort, and fits mobile', async ({
+  page,
+}) => {
+  await page.route('**/api/community/households?*', (route) =>
+    route.fulfill({
+      json: {
+        success: true,
+        data: {
+          data: [
+            { ...household, address: 'Zaitun 1' },
+            {
+              ...household,
+              public_id: 'second',
+              address: 'Anggrek 2',
+              reference: 'internal-reference',
+            },
+          ],
+        },
+      },
+    }),
+  )
+  await page.goto('/manage/households')
+  const table = page.getByRole('table', { name: 'Daftar keluarga' })
+  await expect(table.getByRole('columnheader', { name: 'ALAMAT' })).toBeVisible()
+  await expect(table).not.toContainText('KK-001')
+  await expect(table).not.toContainText('internal-reference')
+  await table.getByRole('columnheader', { name: 'ALAMAT' }).click()
+  await expect(table.locator('tbody tr').first()).toContainText('Anggrek 2')
+  await page.getByRole('textbox', { name: 'Cari di halaman ini' }).fill('zaitun')
+  await expect(table.locator('tbody tr')).toHaveCount(1)
+  await expect(table).toContainText('Zaitun 1')
+  await page.getByRole('button', { name: 'Hapus pencarian' }).click()
+  await page.setViewportSize({ width: 375, height: 812 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({ path: 'e2e/artifacts/datatable-mobile.png', fullPage: true })
+})
+
+test('resident DataTable displays readable columns without technical reference', async ({
+  page,
+}) => {
+  await page.route('**/api/community/residents?*', (route) =>
+    route.fulfill({
+      json: {
+        success: true,
+        data: {
+          data: [
+            {
+              public_id: 'resident-id',
+              name: 'Siti Aminah',
+              reference: 'RES-technical-001',
+              phone: '08123456789',
+              status: 'active',
+            },
+          ],
+        },
+      },
+    }),
+  )
+  await page.goto('/manage/residents')
+  const table = page.getByRole('table', { name: 'Daftar warga' })
+  await expect(table).toContainText('Siti Aminah')
+  await expect(table).not.toContainText('RES-technical-001')
+  await expect(table.getByRole('columnheader', { name: 'REFERENSI' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Aktifkan mode gelap' }).click()
+  await page.getByRole('combobox', { name: 'Bahasa', exact: true }).selectOption('en')
+  await expect(
+    page
+      .getByRole('table', { name: 'Resident list' })
+      .getByRole('columnheader', { name: 'RESIDENT NAME' }),
+  ).toBeVisible()
+  await page.screenshot({ path: 'e2e/artifacts/datatable-dark-en.png', fullPage: true })
 })

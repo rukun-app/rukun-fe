@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import { computed } from 'vue'
 const props = defineProps<{ status?: string }>()
 const label = computed(
@@ -14,6 +15,6 @@ const label = computed(
   <span
     class="status-chip"
     :class="{ 'is-active': status === 'active', 'is-warning': status === 'moved' }"
-    >{{ label }}</span
+    >{{ tr(label) }}</span
   >
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 import SessionActions from '@/auth/components/SessionActions.vue'
 import { computed } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
@@ -21,13 +22,15 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
 </script>
 
 <template>
-  <div class="resident-shell flex flex-col min-h-svh bg-surface-50">
+  <div class="resident-shell flex flex-col min-h-svh bg-surface-50 dark:bg-surface-950">
     <!-- Top status bar area — safe area aware -->
     <header
       v-if="pageTitle"
-      class="sticky top-0 z-30 bg-surface-0 border-b border-surface-200 px-4 py-3 flex items-center gap-3 safe-area-top"
+      class="sticky top-0 z-30 bg-surface-0 dark:bg-surface-900 border-b border-surface-200 dark:border-surface-700 px-4 py-3 flex items-center gap-3 safe-area-top"
     >
-      <h1 class="text-base font-semibold text-surface-900 truncate flex-1">{{ pageTitle }}</h1>
+      <h1 class="text-base font-semibold text-surface-900 dark:text-surface-100 truncate flex-1">
+        {{ tr(pageTitle) }}
+      </h1>
       <SessionActions />
     </header>
 
@@ -38,8 +41,8 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
 
     <!-- Bottom navigation -->
     <nav
-      class="fixed bottom-0 inset-x-0 z-40 bg-surface-0 border-t border-surface-200 flex safe-area-bottom"
-      aria-label="Navigasi utama"
+      class="fixed bottom-0 inset-x-0 z-40 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 flex safe-area-bottom"
+      :aria-label="tr('Navigasi utama')"
     >
       <RouterLink
         v-for="item in navItems"
@@ -50,7 +53,7 @@ const pageTitle = computed(() => String(route.meta['title'] ?? ''))
         :aria-current="isActive(item.to) ? 'page' : undefined"
       >
         <i :class="[item.icon, 'text-xl']" aria-hidden="true" />
-        <span class="text-[11px] leading-none">{{ item.label }}</span>
+        <span class="text-[11px] leading-none">{{ tr(item.label) }}</span>
       </RouterLink>
     </nav>
   </div>

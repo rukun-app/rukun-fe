@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tr } from '@/i18n'
 /**
  * ContextSwitcher — shown when user has multiple contexts.
  * Emits 'switched' after a successful context change.
@@ -35,8 +36,8 @@ function select(contextId: string) {
 </script>
 
 <template>
-  <ul aria-label="Pilihan akses" class="access-options">
-    <li v-if="contexts.length === 0">Tidak ada konteks tersedia</li>
+  <ul :aria-label="tr('Pilihan akses')" class="access-options">
+    <li v-if="contexts.length === 0">{{ tr('Tidak ada konteks tersedia') }}</li>
     <li v-for="ctx in contexts" :key="ctx.id">
       <button
         type="button"
@@ -48,8 +49,8 @@ function select(contextId: string) {
         <span class="access-option-icon"
           ><i :class="`pi ${typeIcon[ctx.type] ?? 'pi-user'}`" aria-hidden="true" /></span
         ><span
-          ><strong>{{ ctx.label }}</strong
-          ><small>{{ typeLabel[ctx.type] ?? ctx.type }}</small></span
+          ><strong>{{ ctx.scope.type === 'global' ? tr(ctx.label) : ctx.label }}</strong
+          ><small>{{ tr(typeLabel[ctx.type] ?? ctx.type) }}</small></span
         ><i class="pi pi-arrow-right" aria-hidden="true" />
       </button>
     </li>
