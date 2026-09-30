@@ -208,6 +208,12 @@ async function save(event: FormSubmitEvent) {
             )
           }}
         </p>
+        <RouterLink
+          v-if="editing && context.can('residents.view')"
+          :to="`/manage/residents/${id}/membership`"
+          >{{ tr('Keanggotaan dan riwayat keluarga') }}
+          <i class="pi pi-arrow-right" aria-hidden="true"
+        /></RouterLink>
         <p class="mt-3">{{ tr('Hubungan keluarga tidak mengubah hak akses akun.') }}</p>
       </aside>
     </div>

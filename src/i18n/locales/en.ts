@@ -1,4 +1,44 @@
 const en: Record<string, string> = {
+  'Pilih hubungan keluarga': 'Choose family relationship',
+  'Keluarga tidak tersedia': 'Household unavailable',
+  'Alamat keluarga dibatasi akses': 'Household address restricted',
+  'Belum terhubung dengan keluarga': 'Not linked to a household',
+  'Tanpa keluarga': 'No household',
+  'Konfirmasi mutasi keluarga': 'Confirm membership change',
+  'Keanggotaan lama akan ditutup. Akses terkait keluarga lama dapat dicabut oleh server.':
+    'The previous membership will end. The server may revoke access tied to the previous household.',
+  'Ya, simpan mutasi': 'Yes, save change',
+  'Mutasi keluarga tersimpan': 'Membership change saved',
+  'Data diperbarui berdasarkan respons server.': 'Records updated from the server response.',
+  'Kembali ke detail warga': 'Back to resident details',
+  'Keanggotaan keluarga': 'Household membership',
+  'Tinjau riwayat dan kelola hubungan warga dengan keluarganya.':
+    'Review history and manage the resident’s household membership.',
+  'Keluarga saat ini': 'Current household',
+  'Mutasi keanggotaan': 'Change membership',
+  'Pilih keluarga tujuan atau akhiri keanggotaan saat ini.':
+    'Choose a destination household or end the current membership.',
+  'Jenis perubahan': 'Change type',
+  'Pindah keluarga / ubah hubungan': 'Move household / change relationship',
+  'Akhiri keanggotaan': 'End membership',
+  'Keluarga tujuan': 'Destination household',
+  'Pilih keluarga tujuan': 'Choose destination household',
+  'Pilih keluarga yang sama untuk mengubah hubungan keluarga.':
+    'Choose the same household to change the family relationship.',
+  'Keluarga tujuan belum dapat diverifikasi.': 'The destination household could not be verified.',
+  'Warga tidak lagi terhubung dengan keluarga. Tindakan ini tidak menghapus data warga.':
+    'The resident will no longer belong to a household. This does not delete their resident record.',
+  'Tinjau perubahan': 'Review change',
+  'Sebagian alamat keluarga tidak dapat dimuat.': 'Some household addresses could not be loaded.',
+  'Riwayat keanggotaan': 'Membership history',
+  'Belum ada riwayat keanggotaan': 'No membership history yet',
+  'Riwayat hanya mencakup keluarga yang boleh diakses akun Anda.':
+    'History only includes households your account can access.',
+  Mulai: 'Started',
+  Berakhir: 'Ended',
+  Selesai: 'Ended',
+  'Keanggotaan dan riwayat keluarga': 'Household membership and history',
+
   AKSI: 'ACTIONS',
   'Cari di halaman ini': 'Search this page',
   'Hapus pencarian': 'Clear search',
@@ -313,5 +353,12 @@ const en: Record<string, string> = {
   Diproses: 'Processing',
   'Kode wajib diisi': 'Code is required',
   'Nama wilayah wajib diisi': 'Area name is required',
+  'Keluarga saya': 'My household',
+  'Alamat dan anggota keluarga yang terdaftar di rumah Anda.':
+    'Your registered home address and household members.',
+  'Referensi keluarga': 'Household reference',
+  'Belum ada anggota keluarga': 'No household members yet',
+  'Hubungi pengurus untuk melengkapi data keluarga Anda.':
+    'Contact your community administrator to complete your household data.',
 }
 export default en

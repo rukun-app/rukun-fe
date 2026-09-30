@@ -27,17 +27,19 @@ Snapshot `openapi/rukun.json` diambil dari backend development pada 30 September
 settlement/galon sudah tercantum. Keberadaan endpoint tidak membuktikan seluruh
 gate bisnis sudah lulus.
 
-Pembacaan `Modules/Identity/Http/AuthController.php` pada backend mengonfirmasi
+Pada audit awal, pembacaan `Modules/Identity/Http/AuthController.php` mengonfirmasi
 bahwa `userData()` hanya mengekspor permission global. Tidak ada endpoint context
 atau validasi `X-Rukun-Context` dalam kontrak yang tersedia.
 
-Frontend sementara menyediakan pilihan presentation management/system hanya
+Implementasi awal menyediakan pilihan presentation management/system hanya
 jika **permission global aktual** mendukungnya. Pilihan ini tidak mengklaim sebagai
 scope RT/RW dan tidak mengirim header context buatan. Role name tidak digunakan
 untuk mengasumsikan permission. Akun tanpa permission global mendapatkan halaman
 akses kosong yang dapat ditutup dengan logout, bukan loading tanpa akhir.
 
-Untuk menyelesaikan FE-2/FE-3 scoped, backend perlu menyediakan kontrak terverifikasi:
+Perubahan terbaru sudah menambahkan contexts dari profil server ke frontend.
+Integrasi isolasi scope nyata belum diverifikasi pada tahap mutasi ini.
+Untuk menyelesaikan gate FE-2/FE-3 scoped, berikut yang tetap perlu diverifikasi:
 
 1. Daftar context milik actor: ID stabil, type, label, scope type/public UUID, capabilities efektif.
 2. Context mencakup assignment temporal aktif serta membership household milik actor; global permissions tidak ditempelkan sembarangan ke context scoped.
@@ -49,19 +51,19 @@ Tidak ada perubahan backend dilakukan dalam pekerjaan frontend ini.
 
 ## Audit tiap fase
 
-| Fase  | Hasil pemeriksaan / pekerjaan                                                                                                                                   | Gate yang masih terbuka                                                                                                                                  |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FE-0  | Client/types Orval dari snapshot aktual, proxy `/api`, timeout, typecheck source, pinned pnpm, CI/drift check                                                   | CI remote belum dijalankan                                                                                                                               |
-| FE-1  | Komponen auth terpasang, token warna/icons terhubung, sidebar mobile, logout/switch access                                                                      | Audit keyboard/a11y seluruh shell; bukan hanya login/dashboard                                                                                           |
-| FE-2  | Login email/HP, profile hydration, initial password guard, session expiry/retry, email recovery, capability guard dan cache cleanup                             | Context scoped backend, validasi multi-scope/revocation end-to-end                                                                                       |
-| FE-3  | Tahap awal: dashboard pengurus, daftar/detail/create/update Household/Resident, cursor pagination, daftar/create wilayah, Zod forms, error/loading/empty states | Warga/home household, profile/inbox, mutasi membership, import/export UI, scoped assignments, sensitive reveal, CRUD wilayah lengkap; gate isolasi scope |
-| FE-4  | API Billing tersedia; belum diimplementasikan FE                                                                                                                | FE-2/3 scoped dan seluruh financial journeys                                                                                                             |
-| FE-5  | API WiFi/galon tercantum pada backend live; FE belum diimplementasikan                                                                                          | Verifikasi readiness backend dan FE-4                                                                                                                    |
-| FE-6  | Foundation Payments tersedia; integrasi Billing/QRIS belum terbukti siap                                                                                        | Contract invoice checkout/reservation/verified receipt                                                                                                   |
-| FE-7  | Pengumuman/layanan warga belum tersedia pada snapshot ini                                                                                                       | Backend F6                                                                                                                                               |
-| FE-8  | Ronda/kegiatan belum tersedia pada snapshot ini                                                                                                                 | Backend F7                                                                                                                                               |
-| FE-9  | Marketplace belum tersedia pada snapshot ini                                                                                                                    | Backend F8                                                                                                                                               |
-| FE-10 | HOLD sesuai rencana                                                                                                                                             | Hardware dan PoC                                                                                                                                         |
+| Fase  | Hasil pemeriksaan / pekerjaan                                                                                                                                                             | Gate yang masih terbuka                                                                                                               |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| FE-0  | Client/types Orval dari snapshot aktual, proxy `/api`, timeout, typecheck source, pinned pnpm, CI/drift check                                                                             | CI remote belum dijalankan                                                                                                            |
+| FE-1  | Komponen auth terpasang, token warna/icons terhubung, sidebar mobile, logout/switch access                                                                                                | Audit keyboard/a11y seluruh shell; bukan hanya login/dashboard                                                                        |
+| FE-2  | Login email/HP, profile hydration, initial password guard, session expiry/retry, email recovery, capability guard dan cache cleanup                                                       | Context scoped backend, validasi multi-scope/revocation end-to-end                                                                    |
+| FE-3  | Tahap 1–2: mutasi/riwayat membership, dashboard pengurus, daftar/detail/create/update Household/Resident, cursor pagination, daftar/create wilayah, Zod forms, error/loading/empty states | Warga/home household, profile/inbox, import/export UI, scoped assignments, sensitive reveal, CRUD wilayah lengkap; gate isolasi scope |
+| FE-4  | API Billing tersedia; belum diimplementasikan FE                                                                                                                                          | FE-2/3 scoped dan seluruh financial journeys                                                                                          |
+| FE-5  | API WiFi/galon tercantum pada backend live; FE belum diimplementasikan                                                                                                                    | Verifikasi readiness backend dan FE-4                                                                                                 |
+| FE-6  | Foundation Payments tersedia; integrasi Billing/QRIS belum terbukti siap                                                                                                                  | Contract invoice checkout/reservation/verified receipt                                                                                |
+| FE-7  | Pengumuman/layanan warga belum tersedia pada snapshot ini                                                                                                                                 | Backend F6                                                                                                                            |
+| FE-8  | Ronda/kegiatan belum tersedia pada snapshot ini                                                                                                                                           | Backend F7                                                                                                                            |
+| FE-9  | Marketplace belum tersedia pada snapshot ini                                                                                                                                              | Backend F8                                                                                                                            |
+| FE-10 | HOLD sesuai rencana                                                                                                                                                                       | Hardware dan PoC                                                                                                                      |
 
 FE-3 tidak ditandai selesai dan pekerjaan tidak dilanjutkan ke transaksi finansial
 sebelum fondasi scope siap. NIK/KK tidak dibaca dari list/detail dan tidak dimuat
@@ -83,12 +85,12 @@ terhadap snapshot versioned, bukan polling backend live pada setiap CI run.
 ## Hasil penyerahan tahap ini
 
 Pada Node 24: install frozen lockfile, typecheck aplikasi/config, lint, format,
-production build, dan OpenAPI drift check lulus. Vitest: **46 unit/component test / 13 file
-lulus**. Playwright Chromium: **28 test lulus**. Login dan dashboard mobile
+production build, dan OpenAPI drift check lulus. Vitest: **52 unit/component test / 14 file
+lulus**. Playwright Chromium: **39 test lulus**. Login dan dashboard mobile
 juga diperiksa secara visual dari screenshot browser.
 
 Sesuai arahan pengguna, pekerjaan berhenti pada perbaikan foundation/auth dan
-FE-3 tahap 1 untuk testing manual. Pengembangan bagian FE-3 berikutnya maupun
+FE-3 tahap 2 untuk testing manual. Pengembangan bagian FE-3 berikutnya maupun
 FE-4 memerlukan instruksi lanjutan pengguna. Tidak ada klaim seluruh fase selesai.
 
 ## Penyempurnaan tahap 1: referensi dan preferensi UI
@@ -98,7 +100,7 @@ cursor load-more, dan retry. ID tetap dikirim melalui DTO generated. Tema gelap
 dan bahasa ID/EN (default ID) tersedia pada auth dan semua shell; preferensi
 tersimpan di localStorage tanpa menyimpan data referensi. Browser fixture menguji
 management/system/auth; component test mencakup shell warga/vendor karena
-backend belum mengekspor context scoped. Fase berikutnya belum dimulai.
+integrasi scope backend nyata belum diverifikasi. Fase berikutnya belum dimulai.
 
 ## Konsolidasi DataTable
 
@@ -115,3 +117,12 @@ Lihat [review komponen](component-review.md): duplikasi submit/guard diangkat ke
 composable, opsi domain disatukan, query referensi dipisahkan dari view, dan
 primitive custom diganti PrimeVue Toolbar/Message/Tag/Password. Refactor tetap
 dalam fase saat ini; tidak mengubah authorization maupun kontrak backend.
+
+## FE-3 tahap 2
+
+Mutasi dan riwayat membership tersedia melalui generated endpoint Community.
+Source backend mengonfirmasi validasi `residents.manage` pada warga dan tujuan,
+serta filtering riwayat dengan `residents.view`. Endpoint tidak punya replay store
+khusus Idempotency-Key; duplicate-submit lock FE dan transaksi/no-op backend
+tidak diklaim sebagai exactly-once guarantee. Pengujian menggunakan fixtures,
+bukan mutasi akun nyata. Detail ada di [catatan tahap 2](membership-stage.md).

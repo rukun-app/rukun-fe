@@ -997,8 +997,8 @@ memungkinkan.
 
 > **Audit aktual 2026-09-30:** status selesai historis di bawah telah dikoreksi
 > berdasarkan pemeriksaan source dan browser. FE-0/FE-1 mendapat perbaikan
-> fondasi, FE-2 belum memenuhi gate context scoped karena backend hanya
-> mengembalikan permission global. FE-3 mulai diimplementasikan sebagian.
+> fondasi, FE-2 masih memerlukan verifikasi isolasi scope pada backend nyata.
+> FE-3 tahap 2 menyediakan mutasi dan riwayat keluarga.
 > Detail: [docs/frontend-audit.md](docs/frontend-audit.md).
 
 > Diperbarui: 2026-09-29
@@ -1007,8 +1007,8 @@ memungkinkan.
 |------|------|--------|-----------------|
 | FE-0 | Project Foundation | 🔧 Diperbaiki; verifikasi lokal, CI remote pending | — |
 | FE-1 | UI Foundation & Application Shells | 🔧 UI responsif, tema terang/gelap, ID/EN; shell scoped diuji component | — |
-| FE-2 | Authentication + Context + RBAC | ⚠️ Auth diperbaiki; kontrak context scoped BE belum tersedia | — |
-| FE-3 | Resident + Household + Area | 🚧 Tahap awal pengelolaan KK/warga/wilayah | — |
+| FE-2 | Authentication + Context + RBAC | ⚠️ Auth diperbaiki; gate integrasi scoped nyata belum terverifikasi | — |
+| FE-3 | Resident + Household + Area | 🚧 Tahap 2: mutasi dan riwayat keluarga | — |
 | FE-4 | Billing + Manual Payment + Cashbook | ⏳ Belum dimulai | — |
 | FE-5 | WiFi + Gallon | ⏳ Belum dimulai | — |
 | FE-6 | QRIS / Payment Gateway | ⏳ Belum dimulai | — |
@@ -1252,7 +1252,7 @@ pnpm build-only  ✓  build sukses, semua auth pages code-split
 
 ------------------------------------------------------------------------
 
-# PHASE FE-3 --- Resident + Household + Area 🚧 Tahap 1
+# PHASE FE-3 --- Resident + Household + Area 🚧 Tahap 2
 
 ## Batas penyerahan FE-3 tahap 1 (2026-09-30)
 
@@ -1290,10 +1290,11 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
 - [x] Regression test lifecycle submit, route/unload guard, dropdown dirty,
   serta keyboard/locale Password. Temuan dicatat di docs/component-review.md.
 - [ ] Dashboard warga, profil/account dan notification inbox.
-- [ ] Mutasi membership, import/export UI dan progress/result.
+- [x] Mutasi membership dan riwayat (FE-3 tahap 2).
+- [ ] Import/export UI dan progress/result.
 - [ ] Scoped role assignment dan reveal/edit data sensitif.
 - [ ] Edit/hapus wilayah.
-- [ ] Kontrak context scoped backend dan gate isolasi RT/RW/Vendor.
+- [ ] Verifikasi kontrak context scoped dan gate isolasi RT/RW/Vendor.
 - [ ] Pengumuman (menunggu modul backend).
 - [ ] Uji manual oleh pengguna terhadap akun/backend development.
 
@@ -1304,9 +1305,30 @@ install frozen lockfile, dan OpenAPI drift check lulus. E2E memakai fixture
 kontrak. Login/pembacaan daftar akun development diperiksa pada iterasi UI;
 CRUD akun nyata, multi-scope backend, CI remote, serta testing manual pengguna
 belum diverifikasi. Shell warga/vendor diuji lewat component test. Checklist
-select, tema, dan bahasa tersedia di README. FE-3 tahap 1 tetap menjadi batas penyerahan.
+select, tema, dan bahasa tersedia di README. Catatan ini merupakan hasil penyerahan tahap 1; progres terbaru ada di tahap 2.
 
 Hasil automated test dan batas integrasi dicatat di README dan audit frontend.
+
+## Penyerahan FE-3 tahap 2: mutasi dan riwayat (2026-09-30)
+
+Pengguna memilih melanjutkan mutasi keluarga + riwayat sebelum FE-4.
+
+- [x] Halaman keanggotaan dari detail warga dengan guard `residents.view`.
+- [x] Riwayat cursor memakai AppDataTable dan generated API; alamat dibaca hanya
+  sesuai capability, dideduplikasi/cache, tanpa fallback UUID.
+- [x] Pindah keluarga, ubah hubungan dalam KK sama, dan akhiri keanggotaan memakai
+  PUT membership; PrimeVue Select/Form/ConfirmDialog dan helper submit bersama.
+- [x] Tinjauan nama/alamat/dampak sebelum mutasi; cancel tidak menulis data.
+- [x] Error backend, duplicate-submit lock, tanpa optimistic update; setelah sukses
+  cache community dibersihkan dan profile di-refresh untuk perubahan akses.
+- [x] Bahasa ID/EN, tema gelap, mobile, unit test payload dan E2E alur utama.
+- [ ] Pengujian mutasi dengan data development oleh pengguna.
+- [ ] Gate isolasi scope dan pencabutan akses pada backend nyata belum diverifikasi.
+
+Verifikasi tahap 2: **52 unit/component test (14 file)** dan **39 E2E Chromium**;
+checklist manual dan batas idempotency/backend ada di `docs/membership-stage.md`.
+FE-3 belum selesai seluruhnya; FE-4 belum dimulai. Penyerahan ini berhenti pada
+mutasi + riwayat agar pengguna dapat menguji dahulu.
 
 ## Resident
 

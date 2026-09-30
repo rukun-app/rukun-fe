@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const preview = process.env['PLAYWRIGHT_PREVIEW'] === '1'
+const baseURL = preview ? 'http://127.0.0.1:4173' : 'http://localhost:5173'
+
 export default defineConfig({
   testDir: './e2e',
   expect: { timeout: 15000 },
@@ -9,7 +12,7 @@ export default defineConfig({
   workers: process.env['CI'] ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -19,8 +22,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env['CI'],
+    command: preview ? 'pnpm preview --host 127.0.0.1 --port 4173 --strictPort' : 'pnpm dev',
+    url: baseURL,
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 1000 },
+    reuseExistingServer: !preview && !process.env['CI'],
   },
 })

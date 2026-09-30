@@ -11,11 +11,11 @@ export const hydrationError = ref<NormalizedApiError | null>(null)
 let hydration: Promise<void> | null = null
 let hydratedToken: string | null = null
 
-/** Current BE exposes only global permissions, not scoped assignments/capabilities.
- * Never infer scoped authorization from a role name or a household list.
+/** Scoped presentation capabilities come from the server; global permissions stay separate.
+ * API endpoints remain responsible for authorization on every request.
  */
 export function profileContexts(user: UserProfile): UserContext[] {
-  const contexts: UserContext[] = []
+  const contexts: UserContext[] = [...(user.contexts ?? [])]
   const permissions = user.permissions
   if (
     permissions.some((p) =>

@@ -41,9 +41,9 @@ berisi credential atau token nyata.
 
 ## Status
 
-Perbaikan foundation/auth dan implementasi awal FE-3 tersedia. Context scoped
-RT/RW/Household/Vendor belum diekspos backend. Saat ini menu management/system
-hanya berasal dari permission global yang benar-benar dikirim server.
+Perbaikan foundation/auth dan FE-3 tahap 2 tersedia. Context scoped dibaca dari
+profil backend; menu management/system juga mengikuti permission global server.
+Gate isolasi scope dan pencabutan akses pada backend nyata masih perlu diverifikasi.
 
 Detail temuan, batas pengujian, dan gate tiap fase ada di
 [Audit frontend](docs/frontend-audit.md) serta [Rencana frontend](plan-fe.md).
@@ -53,14 +53,13 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
 bersama implementasi serta hasil unit test. **Penyerahan saat ini: perbaikan
-fondasi/login dan FE-3 tahap 1; FE-3 belum selesai seluruhnya. FE-4 belum dimulai.**
+fondasi/login dan FE-3 tahap 2 (mutasi + riwayat keluarga); FE-3 belum selesai seluruhnya. FE-4 belum dimulai.**
 
 ## Checklist pengujian manual saat ini
 
-Gunakan akun development yang mempunyai permission global terkait. Akun scoped
-RT/RW/Household/Vendor belum dapat diuji penuh karena backend belum mengekspor
-context dan capability efektif. Tidak ada akun atau password baru yang dibuat
-oleh pekerjaan frontend ini.
+Gunakan akun development yang mempunyai capability terkait. Pengujian penuh
+akun scoped RT/RW/Household/Vendor pada backend nyata masih pending. Tidak ada
+akun atau password baru yang dibuat oleh pekerjaan frontend ini.
 
 1. Buka `http://localhost:5173`; form login harus tampil tanpa redirect berulang.
 2. Login dengan email atau nomor HP. Jika akun wajib mengganti password, halaman
@@ -82,8 +81,8 @@ oleh pekerjaan frontend ini.
 10. Pada halaman lupa password, uji email. Pemulihan lewat SMS tidak tersedia;
     akun yang hanya memakai nomor HP diarahkan menghubungi pengurus.
 
-Yang **belum tersedia** pada tahap FE-3 ini: dashboard warga, profil/inbox,
-mutasi keanggotaan, import/export UI, pengelolaan scoped assignment,
+Yang **belum tersedia** pada tahap FE-3 ini: profil/inbox,
+import/export UI, pengelolaan scoped assignment,
 reveal/edit NIK/KK, serta edit/hapus wilayah. Menu finansial/layanan belum
 ditampilkan sebagai fitur siap pakai.
 
@@ -148,13 +147,29 @@ Tambahan testing manual: ubah dropdown hunian lalu coba tinggalkan form; batalka
 untuk mempertahankan perubahan. Coba toggle password dengan keyboard dan bahasa EN.
 Fase berikutnya tetap belum dimulai.
 
+## FE-3 tahap 2: keanggotaan keluarga
+
+Buka **Data Warga → detail warga → Keanggotaan dan riwayat keluarga**.
+Akun dengan `residents.view` bisa melihat riwayat yang diizinkan backend.
+`residents.manage` diperlukan untuk mutasi; select tujuan/alamat membutuhkan
+`households.view`. Pilih keluarga tujuan dan hubungan, atau **Akhiri keanggotaan**,
+lalu tinjau konfirmasi sebelum menyimpan. Data warga tidak dihapus.
+
+Alamat riwayat yang dibatasi akses tidak diganti UUID. Setelah mutasi berhasil,
+cache community dibersihkan dan profile diperbarui sebelum kembali ke daftar.
+Error 403/409 tetap ditampilkan tanpa perubahan optimistis. Semua kontrol memakai
+PrimeVue dan komponen/composable bersama yang sudah direview.
+
+[Kontrak, batas, dan checklist testing tahap 2](docs/membership-stage.md).
+Tahap ini tidak mencakup import/export ataupun billing.
+
 ## Hasil verifikasi — 30 September 2026
 
 | Pemeriksaan                                 | Hasil             |
 | ------------------------------------------- | ----------------- |
 | Install dari lockfile                       | Lulus             |
-| Unit test (Vitest 4, 13 file)               | **46/46 lulus**   |
-| Browser E2E (Chromium)                      | **28/28 lulus**   |
+| Unit test (Vitest 4, 14 file)               | **52/52 lulus**   |
+| Browser E2E (Chromium)                      | **39/39 lulus**   |
 | TypeScript source Vue dan konfigurasi Node  | Lulus             |
 | ESLint dan Prettier                         | Lulus             |
 | Production build + service worker           | Lulus             |
@@ -171,8 +186,11 @@ pertama, retry select, persistensi bahasa/tema, dan kontrol preferensi di semua 
 
 E2E memakai fixture kontrak. Login akun development dan pembacaan daftar backend
 nyata telah diperiksa pada iterasi UI; CRUD nyata dan multi-scope backend belum
-divalidasi. Shell warga/vendor diperiksa lewat component test karena kontrak
-context scoped belum tersedia. CI remote dan uji manual pengguna masih pending.
+divalidasi. Shell warga/vendor telah diperiksa lewat component test. CI remote dan uji manual pengguna masih pending.
+
+Tes tambahan tahap 2 mencakup validasi payload, konfirmasi/cancel, pindah/akhiri
+keanggotaan, perubahan hubungan dalam KK sama, riwayat cursor/retry, alamat yang
+dibatasi akses, read-only, penolakan 403/409, serta mobile dark/EN.
 
 ## Peta kode
 
@@ -182,7 +200,7 @@ context scoped belum tersedia. CI remote dan uji manual pengguna masih pending.
   menjadi security boundary.
 - `src/api/generated`: client/types dari OpenAPI; mutator Axios menjaga response
   envelope backend, mengirim bearer token dan request ID, serta membatasi timeout.
-- `src/features/community`: FE-3 tahap 1 dan query dengan key context.
+- `src/features/community`: FE-3 tahap 1–2 dan query dengan key context.
 - `src/design-system`: komponen reusable di atas PrimeVue/Aura.
 - `src/i18n`: locale Indonesia; migrasi seluruh copy halaman ke translation key
   masih perlu dilengkapi.
@@ -191,3 +209,16 @@ context scoped belum tersedia. CI remote dan uji manual pengguna masih pending.
 Server state berada di TanStack Query. Pinia menyimpan context/UI state; token
 melalui session abstraction. Generated hooks dibungkus domain query agar scoped
 cache tidak memakai key global yang sama.
+
+Untuk menjalankan E2E terhadap build stabil tanpa reload dari perubahan source:
+
+```bash
+pnpm build-only
+PLAYWRIGHT_PREVIEW=1 pnpm test:e2e --workers=1
+```
+
+## Testing Community dengan akun demo
+
+Backend menyediakan `CommunityDemoSeeder` untuk 10 rumah dengan masing-masing 4 warga dan 25 akun lintas role. Jalankan dari proyek backend sesuai README backend; password awal dan daftar email berada pada `storage/app/private/community-demo-accounts.json` backend (file lokal, tidak di-commit).
+
+Contoh login: `demo.warga01@rukun.test` untuk keluarga rumah 01, `demo.ketua.rt01@rukun.test` untuk RT01, atau `demo.admin@rukun.test` untuk seluruh data. FE memakai `contexts` dari login/me untuk pilihan wilayah/keluarga tanpa membutuhkan permission global pada akun scoped. Halaman `/app/home` menampilkan alamat dan anggota keluarga dari API sesuai household konteks aktif. Server tetap memeriksa akses setiap request.

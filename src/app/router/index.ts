@@ -64,7 +64,15 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/app/layouts/ResidentShell.vue'),
     meta: { requiresAuth: true, contextTypes: ['household'] },
     children: [
-      { path: 'home', name: 'app.home', component: Placeholder, meta: { title: 'Beranda' } },
+      {
+        path: 'home',
+        name: 'app.home',
+        component: () => import('@/features/community/MyHouseholdPage.vue'),
+        meta: {
+          title: 'Keluarga saya',
+          requiredCapabilities: ['households.view', 'residents.view'],
+        },
+      },
       { path: 'billing', name: 'app.billing', component: Placeholder, meta: { title: 'Tagihan' } },
       {
         path: 'billing/:id',
@@ -135,6 +143,12 @@ const routes: RouteRecordRaw[] = [
         name: 'manage.residents.new',
         component: () => import('@/features/community/ResidentPage.vue'),
         meta: { title: 'Tambah warga', requiredCapabilities: ['residents.manage'] },
+      },
+      {
+        path: 'residents/:id/membership',
+        name: 'manage.residents.membership',
+        component: () => import('@/features/community/ResidentMembershipPage.vue'),
+        meta: { title: 'Keanggotaan keluarga', requiredCapabilities: ['residents.view'] },
       },
       {
         path: 'residents/:id',

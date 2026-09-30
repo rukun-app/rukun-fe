@@ -23654,6 +23654,60 @@
                 },
                 "type": "object"
             },
+            "UserContext": {
+                "required": [
+                    "id",
+                    "type",
+                    "label",
+                    "scope",
+                    "capabilities"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "management",
+                            "household",
+                            "vendor"
+                        ]
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "required": [
+                            "type",
+                            "id"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "global",
+                                    "rw",
+                                    "rt",
+                                    "household",
+                                    "vendor"
+                                ]
+                            },
+                            "id": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "capabilities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "UserProfile": {
                 "required": [
                     "id",
@@ -23664,6 +23718,13 @@
                     "permissions"
                 ],
                 "properties": {
+                    "contexts": {
+                        "description": "Current server-resolved scoped presentation contexts; global permissions remain separate. API authorization always checks current scope.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserContext"
+                        }
+                    },
                     "public_id": {
                         "type": "string",
                         "format": "uuid"

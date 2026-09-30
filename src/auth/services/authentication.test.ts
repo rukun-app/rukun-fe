@@ -80,3 +80,27 @@ describe('server-authorized presentation', () => {
     expect(sessionStorage.getItem('rukun:context')).toBeNull()
   })
 })
+
+describe('scoped backend contexts', () => {
+  it('uses server contexts without promoting their capabilities to global permissions', () => {
+    const scoped = {
+      id: 'rt:area-id',
+      type: 'management' as const,
+      label: 'RT 01',
+      scope: { type: 'rt' as const, id: 'area-id' },
+      capabilities: ['households.view'],
+    }
+    expect(profileContexts({ ...user, contexts: [scoped] })).toEqual([scoped])
+    expect(profileContexts({ ...user, contexts: [] })).toEqual([])
+  })
+  it('provides a household context for a resident with no global roles', () => {
+    const home = {
+      id: 'household:home-id',
+      type: 'household' as const,
+      label: 'Rumah 01',
+      scope: { type: 'household' as const, id: 'home-id' },
+      capabilities: ['households.view', 'residents.view'],
+    }
+    expect(profileContexts({ ...user, roles: [], contexts: [home] })).toEqual([home])
+  })
+})

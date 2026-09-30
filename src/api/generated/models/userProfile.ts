@@ -5,6 +5,7 @@
  * Standard API contract for Core R.
  * OpenAPI spec version: 1.0.0
  */
+import type { UserContext } from './userContext';
 import type { UserProfilePhone } from './userProfilePhone';
 import type { UserProfileEmail } from './userProfileEmail';
 import type { UserProfileLocale } from './userProfileLocale';
@@ -13,6 +14,8 @@ import type { UserProfileEmailVerifiedAt } from './userProfileEmailVerifiedAt';
 import type { UserProfileLastLoginAt } from './userProfileLastLoginAt';
 
 export interface UserProfile {
+  /** Current server-resolved scoped presentation contexts; global permissions remain separate. API authorization always checks current scope. */
+  contexts?: UserContext[];
   public_id?: string;
   phone?: UserProfilePhone;
   /** Only me, password change and logout are accessible while true. */
