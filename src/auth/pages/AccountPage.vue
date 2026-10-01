@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import AccountSessions from '@/auth/components/AccountSessions.vue'
+import AccountEmailVerification from '@/auth/components/AccountEmailVerification.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { Form, type FormSubmitEvent } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
@@ -57,7 +58,10 @@ const passwordPassThrough = usePasswordPassThrough()
 const profileResolver = computed(() => zodResolver(profileSchema()))
 const passwordResolver = computed(() => zodResolver(accountPasswordSchema()))
 const sessionsBusy = ref(false)
-const busy = computed(() => profile.busy.value || password.busy.value || sessionsBusy.value)
+const verificationBusy = ref(false)
+const busy = computed(
+  () => profile.busy.value || password.busy.value || sessionsBusy.value || verificationBusy.value,
+)
 function signedOut() {
   profileDirty.value = false
   passwordDirty.value = false
@@ -131,14 +135,15 @@ async function savePassword(event: FormSubmitEvent) {
     <template v-else-if="user">
       <dl class="mb-6 text-sm space-y-2">
         <div>
-          <dt>{{ tr('Email') }}</dt>
-          <dd>{{ user.email || '—' }}</dd>
-        </div>
-        <div>
           <dt>{{ tr('Nomor HP') }}</dt>
           <dd>{{ user.phone || '—' }}</dd>
         </div>
       </dl>
+      <AccountEmailVerification
+        :user="user"
+        :disabled="profile.busy.value || password.busy.value || sessionsBusy"
+        @busy="verificationBusy = $event"
+      />
       <Message v-if="profileSaved" severity="success" :closable="false" class="mb-4">{{
         tr('Profil tersimpan')
       }}</Message>
@@ -237,7 +242,7 @@ async function savePassword(event: FormSubmitEvent) {
         />
       </Form>
       <AccountSessions
-        :disabled="profile.busy.value || password.busy.value"
+        :disabled="profile.busy.value || password.busy.value || verificationBusy"
         :has-unsaved-changes="dirty"
         @busy="sessionsBusy = $event"
         @signed-out="signedOut"

@@ -46,7 +46,7 @@ disimpan, begitu juga sebaliknya. Tidak ada submit bersamaan.
    lebih tinggi prioritasnya. Periksa dark mode dan ponsel.
 
 Pengujian otomatis memakai fixture; tidak mengubah profil/password akun nyata.
-Verifikasi email, inbox, gate scope nyata dan billing masih terpisah.
+UI verifikasi email dilanjutkan pada [tahap 3](email-verification-stage.md); inbox, gate scope nyata dan billing masih terpisah.
 
 ## Tahap 2: sesi perangkat
 
@@ -88,7 +88,7 @@ Setelah tahap 1 lulus pemeriksaan, pengguna meminta melanjutkan tahap berikutnya
 6. Ganti password, lalu periksa daftar sesi terbaru.
 
 Pengujian otomatis tahap 2 tidak mencabut token akun development nyata.
-Verifikasi email, inbox, isolasi scope nyata, serta FE-4 belum dilanjutkan.
+UI verifikasi email tersedia pada [tahap 3](email-verification-stage.md). Integrasi email nyata, inbox, isolasi scope nyata, serta FE-4 masih terbuka.
 
 Verifikasi gabungan: **77/77 unit test (20 file), 76/76 E2E Chromium lulus**,
 typecheck dan build lulus. Semua uji mutasi otomatis memakai fixture.

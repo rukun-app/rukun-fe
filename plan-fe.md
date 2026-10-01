@@ -1293,7 +1293,8 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
   serta keyboard/locale Password. Temuan dicatat di docs/component-review.md.
 - [x] Beranda warga: household dan anggota dari context server (fixture; gate scope nyata pending).
 - [x] Profil/account, password mandiri, bahasa akun dan sesi perangkat.
-- [ ] Verifikasi email dan notification inbox.
+- [x] UI status, kirim ulang, dan pemeriksaan verifikasi email.
+- [ ] Integrasi email bertanda tangan nyata dan notification inbox.
 - [x] Mutasi membership dan riwayat (FE-3 tahap 2).
 - [ ] Import/export UI dan progress/result.
 - [ ] Scoped role assignment dan reveal/edit data sensitif.
@@ -1370,7 +1371,8 @@ ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
   `contexts` **sudah tersedia**, tetapi `X-Rukun-Context` belum dideklarasikan.
   Uji multi-assignment, cross-RT, RW inheritance, vendor dan revocation nyata.
 - [x] FE-3: profil nama/bahasa, password mandiri, daftar/cabut sesi dan logout semua.
-- [ ] FE-3: email verification.
+- [x] FE-3: UI status/kirim ulang/periksa verifikasi email.
+- [ ] FE-3: pengiriman email dan signed verification backend nyata.
 - [ ] FE-3: inbox/unread/read state/preferences; endpoint sudah ada, UI belum.
 - [ ] FE-3: import/export file, progress/poll/cancel, hasil/error/download.
 - [ ] FE-3: provisioning/link/recovery akun dan credential sekali pakai.
@@ -1382,7 +1384,7 @@ ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
   error code context. Search/sort global/total belum didukung; tabel tetap lokal.
 - [ ] Pengumuman: belum ada endpoint, tetap menunggu kontrak backend.
 
-Prioritas tahap selanjutnya: gap context/integrasi dan email verification → inbox →
+Prioritas tahap selanjutnya: gap context/integrasi email nyata → inbox →
 population transfer → administrasi Community/sensitive → gate integrasi akhir
 FE-3. Kerjakan satu tahap per penyerahan dengan instruksi pengguna; jangan
 menandai FE-2/FE-3 selesai hanya karena client endpoint sudah generated.
@@ -1804,3 +1806,18 @@ Tujuannya bukan sekadar membuat screen pertama cepat, tetapi membuat
 setiap feature Rukun berikutnya semakin cepat dibangun tanpa
 mengorbankan scoped authorization, financial correctness, security, dan
 maintainability.
+
+
+## Penyerahan account tahap 3 (2026-10-01)
+
+- [x] Panel PrimeVue verifikasi email lintas akses, ID/EN, dark mode.
+- [x] Status server, kirim ulang email sendiri, loading/error/retry; sukses kirim ulang tidak mengubah status verifikasi.
+- [x] Periksa status tanpa mereset form profil/password yang belum disimpan.
+- [x] Unit test kontrak status dan payload; E2E alur verifikasi dengan fixture API.
+- [ ] Integrasi email nyata, signed URL/expiry, dan redirect frontend jika disepakati backend.
+
+Checklist: [docs/email-verification-stage.md](docs/email-verification-stage.md).
+Penyerahan berhenti pada tahap ini; inbox dan FE-4 belum dimulai.
+
+Validasi tahap 3: **82/82 unit test (21 file), 84/84 E2E Chromium**, TypeScript,
+ESLint, Prettier dan production build lulus. Backend email nyata belum diuji.

@@ -52,7 +52,7 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
-bersama implementasi serta hasil unit test. **Penyerahan saat ini: account tahap 1–2 (profil, bahasa, password, sesi perangkat),
+bersama implementasi serta hasil unit test. **Penyerahan saat ini: account tahap 3 (status dan kirim ulang verifikasi email),
 setelah tahap auth/bahasa dan FE-3 tahap 3. FE-3 belum selesai seluruhnya; FE-4 belum dimulai.**
 
 ## Checklist pengujian manual saat ini
@@ -81,7 +81,7 @@ akun atau password baru yang dibuat oleh pekerjaan frontend ini.
 10. Pada halaman lupa password, uji email. Pemulihan lewat SMS tidak tersedia;
     akun yang hanya memakai nomor HP diarahkan menghubungi pengurus.
 
-Yang **belum tersedia** pada tahap FE-3 ini: verifikasi email/inbox,
+Yang **belum tersedia** pada tahap FE-3 ini: integrasi email nyata/inbox,
 import/export UI, pengelolaan scoped assignment,
 reveal/edit NIK/KK. Menu finansial/layanan belum
 ditampilkan sebagai fitur siap pakai.
@@ -180,7 +180,7 @@ tersedia ketika request gagal.
 [Review lengkap FE-0–FE-3](docs/openapi-review-fe0-fe3.md) memetakan endpoint,
 fitur tersedia, kekurangan UI, dan gate integrasi.
 
-Yang utama masih terbuka: transport/revocation context, verifikasi email,
+Yang utama masih terbuka: transport/revocation context, integrasi email nyata,
 inbox, import/export,
 provisioning akun, assignment, serta sensitive reveal/edit. Context server dan
 beranda keluarga sudah tersedia; isolasi scope nyata belum dinyatakan lulus.
@@ -214,15 +214,15 @@ Tindakan cabut sesi memakai konfirmasi dan menunggu respons sukses.
 
 [Checklist account tahap 1–2](docs/account-stage.md). Pengujian otomatis memakai
 fixture dan tidak mengubah profil/password atau mencabut token development nyata.
-Verifikasi email, inbox dan gate scope tetap terbuka; FE-4 belum dimulai.
+UI verifikasi email tersedia pada tahap 3; integrasi email nyata, inbox dan gate scope tetap terbuka; FE-4 belum dimulai.
 
 ## Hasil verifikasi — 1 Oktober 2026
 
 | Pemeriksaan                                 | Hasil                                        |
 | ------------------------------------------- | -------------------------------------------- |
 | Install dari lockfile                       | Lulus (30 September)                         |
-| Unit test (Vitest 4, 20 file)               | **77/77 lulus**                              |
-| Browser E2E (Chromium)                      | **76/76 lulus**                              |
+| Unit test (Vitest 4, 21 file)               | **82/82 lulus**                              |
+| Browser E2E (Chromium)                      | **84/84 lulus**                              |
 | TypeScript source Vue dan konfigurasi Node  | Lulus                                        |
 | ESLint dan Prettier                         | Lulus                                        |
 | Production build + service worker           | Lulus                                        |
@@ -252,11 +252,11 @@ hapus, read-only, backend errors, retry detail/induk, unsaved guard, serta mobil
 Tambahan tahap auth/bahasa: parsing link, minimum/konfirmasi password, payload,
 sesi lama, error/reset sukses, header locale, dan persistensi pilihan. Unit suite
 lulus dengan `pnpm test --maxWorkers=2`; percobaan worker default sempat timeout
-saat proses paralel. Browser memakai build preview: **76/76 lulus**.
+saat proses paralel. Browser memakai build preview: **84/84 lulus**.
 
 Tambahan account tahap 1–2 mencakup validasi profil/password, prioritas bahasa,
 akses lintas context, guard dua form, DataTable sesi, cancel/konfirmasi, current/all
-logout, error/retry, dan mobile dark EN. Total terbaru: **77 unit / 76 E2E lulus**.
+logout, error/retry, dan mobile dark EN. Total setelah tahap 3: **82 unit / 84 E2E lulus**.
 
 ## Peta kode
 
@@ -288,3 +288,17 @@ PLAYWRIGHT_PREVIEW=1 pnpm test:e2e --workers=1
 Backend menyediakan `CommunityDemoSeeder` untuk 10 rumah dengan masing-masing 4 warga dan 25 akun lintas role. Jalankan dari proyek backend sesuai README backend; password awal dan daftar email berada pada `storage/app/private/community-demo-accounts.json` backend (file lokal, tidak di-commit).
 
 Contoh login: `demo.warga01@rukun.test` untuk keluarga rumah 01, `demo.ketua.rt01@rukun.test` untuk RT01, atau `demo.admin@rukun.test` untuk seluruh data. FE memakai `contexts` dari login/me untuk pilihan wilayah/keluarga tanpa membutuhkan permission global pada akun scoped. Halaman `/app/home` menampilkan alamat dan anggota keluarga dari API sesuai household konteks aktif. Server tetap memeriksa akses setiap request.
+
+## Account tahap 3 — verifikasi email
+
+Buka `/account` untuk melihat status email, meminta kirim ulang, lalu memeriksa
+status setelah membuka tautan asli dari email. Pemeriksaan tidak menghapus isian
+profil/password yang belum disimpan. Tersedia ID/EN dan dark mode lintas akses.
+
+Sukses kirim ulang hanya berarti permintaan diterima. Tautan bertanda tangan tetap
+menuju backend; pengiriman email dan klik tautan nyata belum diuji otomatis.
+[Checklist dan batas integrasi](docs/email-verification-stage.md).
+
+Validasi tahap 3: **82/82 unit test (21 file), 84/84 E2E Chromium**, typecheck,
+ESLint, Prettier, dan production build lulus. Delapan E2E baru mencakup status,
+kirim ulang, error/retry, perlindungan isian belum disimpan, dan mobile dark EN.

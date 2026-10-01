@@ -54,7 +54,12 @@ describe('HTTP locale and public authentication', () => {
   it('does not attach old authentication or scope to public login and recovery', async () => {
     session.setToken('old-session')
     setContextIdProvider(() => 'rt:test')
-    for (const path of ['/auth/login', '/auth/forgot-password', '/auth/reset-password']) {
+    for (const path of [
+      '/auth/login',
+      '/auth/forgot-password',
+      '/auth/reset-password',
+      '/auth/email/resend',
+    ]) {
       const config = await capture(path)
       expect(config.headers.Authorization).toBeUndefined()
       expect(config.headers['X-Rukun-Context']).toBeUndefined()

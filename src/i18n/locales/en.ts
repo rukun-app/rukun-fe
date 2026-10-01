@@ -439,5 +439,21 @@ const en: Record<string, string> = {
   Tindakan: 'Actions',
   'Cabut sesi': 'Revoke session',
   'Nomor HP': 'Phone number',
+  'Verifikasi email': 'Email verification',
+  'Belum memiliki email': 'No email address',
+  'Status verifikasi belum tersedia': 'Verification status unavailable',
+  'Email belum terverifikasi': 'Email not verified',
+  'Email terverifikasi': 'Email verified',
+  'Terverifikasi pada': 'Verified on',
+  'Akun ini belum memiliki email. Hubungi pengurus untuk bantuan data akun.':
+    'This account has no email address. Contact your administrator for account assistance.',
+  'Buka tautan verifikasi dari email, lalu kembali ke halaman ini dan periksa status.':
+    'Open the verification link in your email, then return here and check the status.',
+  'Permintaan kirim ulang diterima. Periksa kotak masuk atau spam. Status email belum berubah.':
+    'Resend request accepted. Check your inbox or spam folder. Email status has not changed.',
+  'Server masih menandai email belum terverifikasi. Jika tautan kedaluwarsa, minta kirim ulang.':
+    'The server still marks your email as unverified. If the link has expired, request a new email.',
+  'Kirim ulang email verifikasi': 'Resend verification email',
+  'Periksa status email': 'Check email status',
 }
 export default en

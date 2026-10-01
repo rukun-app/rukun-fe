@@ -5,9 +5,12 @@ import { i18n } from '@/i18n'
 
 function isPublicAuthRequest(url = '') {
   const path = url.split('?')[0]
-  return ['/auth/login', '/auth/forgot-password', '/auth/reset-password'].some((endpoint) =>
-    path?.endsWith(endpoint),
-  )
+  return [
+    '/auth/login',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/email/resend',
+  ].some((endpoint) => path?.endsWith(endpoint))
 }
 
 // Context transport is injected after Pinia is installed.
