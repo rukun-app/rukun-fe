@@ -1,12 +1,23 @@
 import { createI18n } from 'vue-i18n'
 import id from './locales/id'
 import en from './locales/en'
-export function savedLocale(): 'id' | 'en' {
+function storedLocale(): 'id' | 'en' | undefined {
   try {
-    return localStorage.getItem('rukun:locale') === 'en' ? 'en' : 'id'
+    const value = localStorage.getItem('rukun:locale')
+    return value === 'id' || value === 'en' ? value : undefined
   } catch {
-    return 'id'
+    return undefined
   }
+}
+let explicitLocale = storedLocale()
+export function savedLocale(): 'id' | 'en' {
+  return storedLocale() ?? 'id'
+}
+/** Explicit browser choice wins; otherwise use the account preference, then ID. */
+export function applyProfileLocale(value?: string | null) {
+  const locale = explicitLocale ?? (value === 'en' ? 'en' : 'id')
+  i18n.global.locale.value = locale
+  document.documentElement.lang = locale
 }
 export const i18n = createI18n({
   legacy: false,
@@ -16,6 +27,7 @@ export const i18n = createI18n({
 })
 export function setLocale(value: string) {
   const locale = value === 'en' ? 'en' : 'id'
+  explicitLocale = locale
   i18n.global.locale.value = locale
   document.documentElement.lang = locale
   try {

@@ -390,5 +390,25 @@ const en: Record<string, string> = {
   'Kata sandi minimal 12 karakter': 'Password must contain at least 12 characters',
   'Minta tautan reset baru': 'Request a new reset link',
   'Kembali ke halaman masuk': 'Back to sign in',
+  'Akun saya': 'My account',
+  'Nama maksimal 100 karakter': 'Name must be at most 100 characters',
+  'Kata sandi saat ini wajib diisi': 'Current password is required',
+  'Kata sandi minimal 8 karakter': 'Password must contain at least 8 characters',
+  'Kata sandi baru harus berbeda': 'New password must be different',
+  'Kembali ke aplikasi': 'Back to application',
+  'Kelola nama, bahasa akun, dan kata sandi Anda.':
+    'Manage your name, account language, and password.',
+  'Profil tersimpan': 'Profile saved',
+  'Profil akun': 'Account profile',
+  'Bahasa akun': 'Account language',
+  'Simpan profil untuk menerapkan bahasa akun. Pilihan bahasa di perangkat ini diutamakan saat masuk.':
+    'Save your profile to apply the account language. This device\u2019s language choice takes priority when signing in.',
+  'Simpan profil': 'Save profile',
+  'Kata sandi diperbarui. Sesi perangkat lain telah dicabut oleh server.':
+    'Password updated. Other device sessions have been revoked by the server.',
+  'Ganti kata sandi': 'Change password',
+  'Minimal 8 karakter. Sesi perangkat ini tetap aktif; sesi lain dicabut setelah berhasil.':
+    'At least 8 characters. This session stays active; other sessions are revoked after success.',
+  'Kata Sandi Saat Ini': 'Current Password',
 }
 export default en

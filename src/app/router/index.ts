@@ -65,6 +65,15 @@ const routes: RouteRecordRaw[] = [
     ],
   },
 
+  {
+    path: '/account',
+    component: () => import('@/app/layouts/AuthLayout.vue'),
+    meta: { requiresAuth: true, title: 'Akun saya' },
+    children: [
+      { path: '', name: 'account', component: () => import('@/auth/pages/AccountPage.vue') },
+    ],
+  },
+
   // Resident — ResidentShell
   {
     path: '/app',
@@ -111,7 +120,7 @@ const routes: RouteRecordRaw[] = [
         component: Placeholder,
         meta: { title: 'Marketplace' },
       },
-      { path: 'account', name: 'app.account', component: Placeholder, meta: { title: 'Akun' } },
+      { path: 'account', name: 'app.account', redirect: '/account' },
       {
         path: 'notifications',
         name: 'app.notifications',

@@ -19,6 +19,7 @@ const initials = computed(() =>
     .toUpperCase(),
 )
 const items = computed(() => [
+  { label: tr('Akun saya'), icon: 'pi pi-user', command: () => router.push('/account') },
   {
     label: tr('Ganti akses'),
     icon: 'pi pi-arrow-right-arrow-left',

@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { applyProfileLocale } from '@/i18n'
 import { session } from '@/auth/stores/session'
 import { apiFetchMe } from '@/auth/api/auth'
 import type { UserProfile } from '@/api/generated/models'
@@ -43,6 +44,7 @@ export function profileContexts(user: UserProfile): UserContext[] {
 }
 
 export function applyProfile(user: UserProfile): void {
+  applyProfileLocale(user.locale)
   session.setUser({
     id: user.public_id ?? String(user.id),
     name: user.name,
