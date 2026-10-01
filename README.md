@@ -52,8 +52,8 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
-bersama implementasi serta hasil unit test. **Penyerahan saat ini: tahap auth/bahasa (reset password + bahasa API),
-setelah FE-3 tahap 3. FE-3 belum selesai seluruhnya; FE-4 belum dimulai.**
+bersama implementasi serta hasil unit test. **Penyerahan saat ini: account tahap 1–2 (profil, bahasa, password, sesi perangkat),
+setelah tahap auth/bahasa dan FE-3 tahap 3. FE-3 belum selesai seluruhnya; FE-4 belum dimulai.**
 
 ## Checklist pengujian manual saat ini
 
@@ -81,7 +81,7 @@ akun atau password baru yang dibuat oleh pekerjaan frontend ini.
 10. Pada halaman lupa password, uji email. Pemulihan lewat SMS tidak tersedia;
     akun yang hanya memakai nomor HP diarahkan menghubungi pengurus.
 
-Yang **belum tersedia** pada tahap FE-3 ini: profil/inbox,
+Yang **belum tersedia** pada tahap FE-3 ini: verifikasi email/inbox,
 import/export UI, pengelolaan scoped assignment,
 reveal/edit NIK/KK. Menu finansial/layanan belum
 ditampilkan sebagai fitur siap pakai.
@@ -180,8 +180,8 @@ tersedia ketika request gagal.
 [Review lengkap FE-0–FE-3](docs/openapi-review-fe0-fe3.md) memetakan endpoint,
 fitur tersedia, kekurangan UI, dan gate integrasi.
 
-Yang utama masih terbuka: transport/revocation context, sinkronisasi locale
-profil, account dan inbox, import/export,
+Yang utama masih terbuka: transport/revocation context, verifikasi email,
+inbox, import/export,
 provisioning akun, assignment, serta sensitive reveal/edit. Context server dan
 beranda keluarga sudah tersedia; isolasi scope nyata belum dinyatakan lulus.
 FE-4 tetap belum dimulai.
@@ -194,20 +194,35 @@ memberi jalur meminta tautan baru. Setelah sukses, sesi/cache lokal dan paramete
 reset pada URL dibersihkan; pengguna login kembali.
 
 `Accept-Language` kini mengikuti pilihan ID/EN pada setiap request, termasuk
-setelah reload; default tetap ID. Penyimpanan locale pada profil server masih
-menunggu tahap account. Recovery tetap dapat dibuka saat sesi lama bermasalah.
+setelah reload; default tetap ID. Penyimpanan locale pada profil server tersedia melalui halaman account. Recovery tetap dapat dibuka saat sesi lama bermasalah.
 
 [Kontrak, batas, dan checklist testing auth/bahasa](docs/auth-recovery-stage.md).
 Pengiriman email dan reset password backend nyata perlu diuji manual; otomatis
 memakai fixture tanpa mengubah password development.
+
+## Account tahap 1–2
+
+Buka **Menu akun → Akun saya** atau `/account`. Halaman bersama untuk warga,
+pengurus, vendor dan system ini menyediakan edit nama/bahasa, ganti password
+mandiri, daftar sesi perangkat, pencabutan satu sesi dan logout semua perangkat.
+Email/HP hanya ditampilkan karena bukan field edit pada kontrak profil.
+
+Bahasa eksplisit perangkat diutamakan saat login, lalu locale akun, lalu ID.
+Simpan profil menerapkan bahasa yang disimpan; toolbar tetap pilihan lokal.
+Ganti password mempertahankan sesi ini dan mencabut sesi lain sesuai backend.
+Tindakan cabut sesi memakai konfirmasi dan menunggu respons sukses.
+
+[Checklist account tahap 1–2](docs/account-stage.md). Pengujian otomatis memakai
+fixture dan tidak mengubah profil/password atau mencabut token development nyata.
+Verifikasi email, inbox dan gate scope tetap terbuka; FE-4 belum dimulai.
 
 ## Hasil verifikasi — 1 Oktober 2026
 
 | Pemeriksaan                                 | Hasil                                        |
 | ------------------------------------------- | -------------------------------------------- |
 | Install dari lockfile                       | Lulus (30 September)                         |
-| Unit test (Vitest 4, 17 file)               | **67/67 lulus**                              |
-| Browser E2E (Chromium)                      | **58/58 lulus**                              |
+| Unit test (Vitest 4, 20 file)               | **77/77 lulus**                              |
+| Browser E2E (Chromium)                      | **76/76 lulus**                              |
 | TypeScript source Vue dan konfigurasi Node  | Lulus                                        |
 | ESLint dan Prettier                         | Lulus                                        |
 | Production build + service worker           | Lulus                                        |
@@ -237,7 +252,11 @@ hapus, read-only, backend errors, retry detail/induk, unsaved guard, serta mobil
 Tambahan tahap auth/bahasa: parsing link, minimum/konfirmasi password, payload,
 sesi lama, error/reset sukses, header locale, dan persistensi pilihan. Unit suite
 lulus dengan `pnpm test --maxWorkers=2`; percobaan worker default sempat timeout
-saat proses paralel. Browser memakai build preview: **58/58 lulus**.
+saat proses paralel. Browser memakai build preview: **76/76 lulus**.
+
+Tambahan account tahap 1–2 mencakup validasi profil/password, prioritas bahasa,
+akses lintas context, guard dua form, DataTable sesi, cancel/konfirmasi, current/all
+logout, error/retry, dan mobile dark EN. Total terbaru: **77 unit / 76 E2E lulus**.
 
 ## Peta kode
 

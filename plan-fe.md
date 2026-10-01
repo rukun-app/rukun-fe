@@ -1292,7 +1292,8 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
 - [x] Regression test lifecycle submit, route/unload guard, dropdown dirty,
   serta keyboard/locale Password. Temuan dicatat di docs/component-review.md.
 - [x] Beranda warga: household dan anggota dari context server (fixture; gate scope nyata pending).
-- [ ] Profil/account dan notification inbox.
+- [x] Profil/account, password mandiri, bahasa akun dan sesi perangkat.
+- [ ] Verifikasi email dan notification inbox.
 - [x] Mutasi membership dan riwayat (FE-3 tahap 2).
 - [ ] Import/export UI dan progress/result.
 - [ ] Scoped role assignment dan reveal/edit data sensitif.
@@ -1359,15 +1360,17 @@ ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
 - [ ] FE-0: verifikasi CI remote; konsistensi response/domain invariant.
 - [x] FE-1/2: Accept-Language mengikuti locale UI tiap request; default ID,
   persistensi lokal dan fallback saat storage gagal teruji.
-- [ ] FE-1/2: sinkronisasi locale profil pada tahap account; audit a11y/reuse
-  dan menu placeholder tersisa.
+- [x] FE-1/2: bahasa akun tersimpan via profil; saat login preferensi perangkat
+  eksplisit > locale akun > ID.
+- [ ] FE-1/2: audit a11y/reuse dan menu placeholder tersisa.
 - [x] FE-2: form reset token/email, alias tautan email, validasi minimal 12,
   konfirmasi, error/retry, sukses dan login ulang; minimum change tetap 8.
 - [ ] FE-2: uji pengiriman email dan reset password development nyata.
 - [ ] FE-2/3: tetapkan transport context aktif dan recovery invalid/revoked;
   `contexts` **sudah tersedia**, tetapi `X-Rukun-Context` belum dideklarasikan.
   Uji multi-assignment, cross-RT, RW inheritance, vendor dan revocation nyata.
-- [ ] FE-3: profile/account, password mandiri, email verification, token devices.
+- [x] FE-3: profil nama/bahasa, password mandiri, daftar/cabut sesi dan logout semua.
+- [ ] FE-3: email verification.
 - [ ] FE-3: inbox/unread/read state/preferences; endpoint sudah ada, UI belum.
 - [ ] FE-3: import/export file, progress/poll/cancel, hasil/error/download.
 - [ ] FE-3: provisioning/link/recovery akun dan credential sekali pakai.
@@ -1379,7 +1382,7 @@ ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
   error code context. Search/sort global/total belum didukung; tabel tetap lokal.
 - [ ] Pengumuman: belum ada endpoint, tetap menunggu kontrak backend.
 
-Prioritas tahap selanjutnya: gap context/integrasi → account dan locale profil → inbox →
+Prioritas tahap selanjutnya: gap context/integrasi dan email verification → inbox →
 population transfer → administrasi Community/sensitive → gate integrasi akhir
 FE-3. Kerjakan satu tahap per penyerahan dengan instruksi pengguna; jangan
 menandai FE-2/FE-3 selesai hanya karena client endpoint sudah generated.
@@ -1399,11 +1402,39 @@ Pengguna memilih menutup reset password + bahasa API sebelum billing.
 - [x] **67/67 unit test (17 file, --maxWorkers=2), 58/58 E2E Chromium**;
   typecheck, lint dan production build lulus. Locale backend development
   diverifikasi lewat GET /api/locales (HTTP 200, Content-Language ID/EN).
-- [ ] Integrasi email/reset nyata, locale profil, serta gate context belum ditutup.
+- [ ] Integrasi email/reset nyata dan gate context belum ditutup. Locale profil
+  diselesaikan pada tahap account berikutnya.
 
 Checklist: [docs/auth-recovery-stage.md](docs/auth-recovery-stage.md).
 FE-3 belum selesai seluruhnya; FE-4 belum dimulai. Penyerahan berhenti pada
 reset password + bahasa API untuk pengujian pengguna.
+
+## Penyerahan account tahap 1–2 (2026-10-01)
+
+Pengguna mengizinkan lanjut tahap berikutnya setelah tahap 1 lolos pemeriksaan.
+
+- [x] Halaman `/account` dipakai bersama semua jenis akses; menu Akun saya dan
+  redirect `/app/account`; initial-password guard tetap berlaku.
+- [x] Profil name/locale, validasi dan field error; email/HP read-only;
+  UI/session memakai respons server, tanpa update optimistis.
+- [x] Prioritas bahasa perangkat eksplisit > profil > ID; simpan profil
+  menerapkan bahasa akun, toolbar tetap preferensi lokal tanpa PATCH otomatis.
+- [x] Password mandiri dengan password saat ini, min. 8, konfirmasi cocok dan
+  berbeda; sukses membersihkan input dan mempertahankan sesi perangkat ini.
+- [x] Dua form memakai PrimeVue dan helper bersama; dirty guard tidak hilang
+  saat form lain disimpan. Tidak ada submit bersamaan.
+- [x] Sesi perangkat memakai AppDataTable, nama/tanggal manusiawi, current marker,
+  empty/error/retry, konfirmasi cabut satu atau semua sesi.
+- [x] Cabut sesi lain mempertahankan login; cabut current/semua baru logout lokal
+  setelah sukses. Error tidak menghapus data secara optimistis.
+- [x] Formatter tanggal reusable untuk membership dan sesi; ID/EN dan dark mobile.
+- [x] **77/77 unit test (20 file), 76/76 E2E Chromium**, typecheck dan production
+  build lulus; lint/format diperiksa.
+- [ ] Pengujian profil/password dan pencabutan sesi backend nyata oleh pengguna.
+- [ ] Verifikasi email dan gate isolasi scope nyata masih terbuka.
+
+Checklist: [docs/account-stage.md](docs/account-stage.md). Penyerahan berhenti
+pada account tahap 2; inbox dan FE-4 belum dimulai.
 
 ## Resident
 

@@ -48,7 +48,7 @@ bahasa response sesuai aturan locale-nya. Pemeriksaan GET `/api/locales` melalui
 proxy development mengembalikan HTTP 200 dan `Content-Language: id`/`en` sesuai
 header yang dikirim. Default backend masih EN, tetapi frontend tetap ID sesuai
 preferensi pengguna. Sinkronisasi locale melalui
-`PATCH /auth/profile` belum dikerjakan; ini bagian tahap account berikutnya.
+`PATCH /auth/profile` sudah ditambahkan pada [tahap account](account-stage.md).
 Tidak ada PATCH profil otomatis ketika pengguna mengganti bahasa pada toolbar.
 
 ## Checklist manual

@@ -410,5 +410,34 @@ const en: Record<string, string> = {
   'Minimal 8 karakter. Sesi perangkat ini tetap aktif; sesi lain dicabut setelah berhasil.':
     'At least 8 characters. This session stays active; other sessions are revoked after success.',
   'Kata Sandi Saat Ini': 'Current Password',
+  'Perangkat tanpa nama': 'Unnamed device',
+  'Cabut sesi perangkat?': 'Revoke device session?',
+  'Keluar dari semua perangkat?': 'Sign out of all devices?',
+  'Semua sesi akun Anda': 'All your account sessions',
+  'Perangkat ini juga akan keluar. Anda perlu masuk kembali.':
+    'This device will also sign out. You will need to sign in again.',
+  'Perangkat tersebut perlu masuk kembali; sesi perangkat ini tetap aktif.':
+    'That device will need to sign in again; this device stays signed in.',
+  'Perubahan formulir yang belum disimpan akan dibuang setelah berhasil.':
+    'Unsaved form changes will be discarded after success.',
+  'Ya, lanjutkan': 'Yes, continue',
+  'Sesi perangkat dicabut': 'Device session revoked',
+  'Sesi perangkat': 'Device sessions',
+  'Nama sesi berasal dari server dan mungkin sama pada beberapa perangkat.':
+    'Session names come from the server and may be the same on different devices.',
+  'Muat ulang sesi': 'Refresh sessions',
+  'Keluar dari semua perangkat': 'Sign out of all devices',
+  'Daftar sesi perangkat': 'Device sessions list',
+  'Tidak ada sesi perangkat': 'No device sessions',
+  'Muat ulang untuk melihat sesi terbaru dari server.':
+    'Refresh to see the latest sessions from the server.',
+  Perangkat: 'Device',
+  'Perangkat ini': 'This device',
+  Dibuat: 'Created',
+  'Terakhir digunakan': 'Last used',
+  Kedaluwarsa: 'Expires',
+  Tindakan: 'Actions',
+  'Cabut sesi': 'Revoke session',
+  'Nomor HP': 'Phone number',
 }
 export default en

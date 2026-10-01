@@ -11,12 +11,17 @@ const initialUser = {
   permissions: ['areas.view'],
   must_change_password: false,
 }
+
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/auth/tokens', (route) =>
+    route.fulfill({ json: { success: true, data: [] } }),
+  )
   await page.addInitScript(() => localStorage.setItem('rukun:token', 'account-session'))
   await page.route('**/api/auth/me', (route) =>
     route.fulfill({ json: { success: true, data: initialUser } }),
   )
 })
+
 async function passwords(page: Page, current = 'old-password', next = 'new-password') {
   await page.getByLabel('Kata Sandi Saat Ini', { exact: true }).fill(current)
   await page.getByLabel('Kata Sandi Baru', { exact: true }).fill(next)
@@ -184,7 +189,7 @@ test('server language is adopted without local choice, and account supports dark
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/account')
   await expect(page.getByRole('heading', { name: 'My account', exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Enable dark mode' }).click()
+  await page.getByRole('button', { name: 'Use dark mode' }).click()
   await expect(page.getByRole('button', { name: 'Save profile', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.screenshot({

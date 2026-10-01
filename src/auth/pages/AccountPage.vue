@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import AccountSessions from '@/auth/components/AccountSessions.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { Form, type FormSubmitEvent } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
@@ -55,7 +56,12 @@ const passwordRevision = ref(0)
 const passwordPassThrough = usePasswordPassThrough()
 const profileResolver = computed(() => zodResolver(profileSchema()))
 const passwordResolver = computed(() => zodResolver(accountPasswordSchema()))
-const busy = computed(() => profile.busy.value || password.busy.value)
+const sessionsBusy = ref(false)
+const busy = computed(() => profile.busy.value || password.busy.value || sessionsBusy.value)
+function signedOut() {
+  profileDirty.value = false
+  passwordDirty.value = false
+}
 const passwordFields = [
   { name: 'current_password', label: 'Kata Sandi Saat Ini', autocomplete: 'current-password' },
   { name: 'password', label: 'Kata Sandi Baru', autocomplete: 'new-password' },
@@ -65,6 +71,14 @@ const passwordFields = [
     autocomplete: 'new-password',
   },
 ] as const
+function editProfile() {
+  profileDirty.value = true
+  profileSaved.value = false
+}
+function editPassword() {
+  passwordDirty.value = true
+  passwordSaved.value = false
+}
 async function saveProfile(event: FormSubmitEvent) {
   if (!event.valid || busy.value) return
   profileSaved.value = false
@@ -91,6 +105,9 @@ async function savePassword(event: FormSubmitEvent) {
     passwordDirty.value = false
     passwordRevision.value++
     passwordSaved.value = true
+    await queryClient.invalidateQueries({
+      queryKey: ['account', session.getUser()?.id, 'sessions'],
+    })
   })
 }
 </script>
@@ -132,14 +149,8 @@ async function savePassword(event: FormSubmitEvent) {
         :resolver="profileResolver"
         class="auth-form"
         @submit="saveProfile"
-        @input="
-          profileDirty = true
-          profileSaved = false
-        "
-        @change="
-          profileDirty = true
-          profileSaved = false
-        "
+        @input="editProfile"
+        @change="editProfile"
       >
         <h2 class="font-semibold">{{ tr('Profil akun') }}</h2>
         <MutationErrors :error="profile.error.value" />
@@ -166,10 +177,7 @@ async function savePassword(event: FormSubmitEvent) {
             option-label="label"
             option-value="value"
             :disabled="busy"
-            @change="
-              profileDirty = true
-              profileSaved = false
-            "
+            @change="editProfile"
           /><small class="text-surface-500">{{
             tr(
               'Simpan profil untuk menerapkan bahasa akun. Pilihan bahasa di perangkat ini diutamakan saat masuk.',
@@ -194,10 +202,7 @@ async function savePassword(event: FormSubmitEvent) {
         :resolver="passwordResolver"
         class="auth-form"
         @submit="savePassword"
-        @input="
-          passwordDirty = true
-          passwordSaved = false
-        "
+        @input="editPassword"
       >
         <h2 class="font-semibold">{{ tr('Ganti kata sandi') }}</h2>
         <p class="text-sm text-surface-500">
@@ -231,6 +236,12 @@ async function savePassword(event: FormSubmitEvent) {
           :disabled="busy"
         />
       </Form>
+      <AccountSessions
+        :disabled="profile.busy.value || password.busy.value"
+        :has-unsaved-changes="dirty"
+        @busy="sessionsBusy = $event"
+        @signed-out="signedOut"
+      />
     </template>
   </div>
 </template>
