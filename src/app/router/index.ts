@@ -108,11 +108,16 @@ const routes: RouteRecordRaw[] = [
           requiredCapabilities: ['households.view', 'residents.view'],
         },
       },
-      { path: 'billing', name: 'app.billing', component: Placeholder, meta: { title: 'Tagihan' } },
+      {
+        path: 'billing',
+        name: 'app.billing',
+        component: () => import('@/features/billing/BillingPage.vue'),
+        meta: { title: 'Tagihan' },
+      },
       {
         path: 'billing/:id',
         name: 'app.billing.detail',
-        component: Placeholder,
+        component: () => import('@/features/billing/BillingPage.vue'),
         meta: { title: 'Detail Tagihan' },
       },
       {
@@ -217,7 +222,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'billing',
         name: 'manage.billing',
-        component: Placeholder,
+        component: () => import('@/features/billing/BillingPage.vue'),
         meta: { title: 'Tagihan' },
       },
       {

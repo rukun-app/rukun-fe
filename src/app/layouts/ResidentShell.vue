@@ -8,7 +8,7 @@ const route = useRoute()
 
 const navItems = [
   { to: '/app/home', label: 'Beranda', icon: 'pi pi-home' },
-  { to: '/app/billing', label: 'Tagihan', icon: 'pi pi-file-invoice' },
+  { to: '/app/billing', label: 'Tagihan', icon: 'pi pi-wallet' },
   { to: '/app/patrol', label: 'Ronda', icon: 'pi pi-shield' },
   { to: '/app/services', label: 'Layanan', icon: 'pi pi-th-large' },
   { to: '/app/account', label: 'Akun', icon: 'pi pi-user' },
