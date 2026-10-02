@@ -10,6 +10,30 @@
 
 ------------------------------------------------------------------------
 
+## Status pengerjaan terkini
+
+> Update 2 Oktober 2026: FE-4 foundation billing sedang berjalan di frontend.
+> Fokus saat ini adalah menyatukan contract backend billing dengan shell UI yang
+> sudah ada: ringkasan tagihan, daftar invoice, detail invoice, serta koreksi
+> layout dan navigasi agar konsisten dengan halaman lain.
+
+Pekerjaan yang sudah masuk pada FE-4 foundation:
+- route `app.billing` dan `manage.billing` aktif ke page yang valid;
+- query ke `billingListInvoice`, `billingListSubmission`, dan `billingShowInvoice`
+  dipakai pada page;
+- summary outstanding, due, dan invoice aktif; status badge menggunakan metadata
+  domain yang konsisten;
+- detail invoice tampil dengan layout yang mengikuti page-container aplikasi;
+- bottom navigation Tagihan memakai ikon yang valid dan label memakai i18n.
+
+Pekerjaan FE-4 yang masih tertunda:
+- alur submit transfer manual dan upload bukti pembayaran;
+- review/approval queue untuk submission manual;
+- detail receipt dan review ledger/cashbook;
+- integrasi full flow sesuai hasil real backend di deployment nyata.
+
+------------------------------------------------------------------------
+
 ## 1. Tujuan Frontend
 
 Frontend Rukun harus melayani beberapa jenis pengguna tanpa membuat

@@ -41,8 +41,21 @@ berisi credential atau token nyata.
 
 ## Status
 
-Perbaikan foundation/auth dan FE-3 tahap 3 tersedia. Context scoped dibaca dari
+Foundation/auth dan FE-3 tahap 3 sudah tersedia. Context scoped dibaca dari
 profil backend; menu management/system juga mengikuti permission global server.
+Saat ini fokus berpindah ke FE-4 foundation: billing page, ringkasan tagihan,
+route detail invoice, dan koreksi layout/navigasi yang sesuai pola shell yang
+sudah ada.
+
+Update terbaru 2 Oktober 2026:
+- billing page pada resident/management shell sudah terhubung ke endpoint backend
+  yang tersedia di OpenAPI;
+- summary tagihan menampilkan outstanding, overdue, dan total aktif;
+- detail invoice bisa dibuka dari daftar dengan tombol detail;
+- layout halaman tagihan disamakan dengan page-container umum;
+- ikon bottom navigation Tagihan sudah muncul kembali;
+- label UI menggunakan helper i18n sesuai konvensi proyek.
+
 Gate isolasi scope dan pencabutan akses pada backend nyata masih perlu diverifikasi.
 
 Detail temuan, batas pengujian, dan gate tiap fase ada di
@@ -52,8 +65,9 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
-bersama implementasi serta hasil unit test. **Penyerahan saat ini: preferensi notifikasi tahap 2,
-setelah tahap auth/bahasa dan FE-3 tahap 3. FE-3 belum selesai seluruhnya; FE-4 belum dimulai.**
+bersama implementasi serta hasil unit test. **Penyerahan saat ini: FE-4 foundation billing
+sudah aktif untuk daftar dan detail invoice; remaining FE-4 masih di arah transfer manual,
+approval queue, dan ledger/receipt review.**
 
 ## Checklist pengujian manual saat ini
 
