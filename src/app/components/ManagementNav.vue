@@ -24,6 +24,7 @@ const items = computed(() =>
     },
     { to: '/manage/areas', label: 'Wilayah RT / RW', icon: 'pi pi-map', capability: 'areas.view' },
     { to: '/manage/billing', label: 'Tagihan', icon: 'pi pi-wallet', capability: 'billing.manage' },
+    { to: '/manage/cashbook', label: 'Kas', icon: 'pi pi-book', capability: 'billing.manage' },
   ].filter((item) => !item.capability || context.can(item.capability)),
 )
 </script>

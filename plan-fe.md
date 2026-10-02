@@ -30,11 +30,13 @@ Pekerjaan yang sudah masuk pada FE-4 foundation:
   tanggal transfer, upload bukti, dan catatan sesuai kontrak backend;
 - form generate tagihan untuk pengurus aktif dengan pemilihan wilayah, jenis
   tagihan, periode, due date, subject, dan household target sesuai kontrak
-  `billingGenerateInvoices`.
+  `billingGenerateInvoices`;
+- halaman kas pengurus aktif via `manage.cashbook`, membaca `billingListLedgerEntry`
+  untuk ringkasan pemasukan, pengeluaran, saldo bersih, dan ledger historis.
 
 Pekerjaan FE-4 yang masih tertunda:
 - review/approval queue untuk submission manual;
-- detail receipt dan review ledger/cashbook;
+- detail receipt dan review ledger/cashbook lanjutan;
 - integrasi full flow sesuai hasil real backend di deployment nyata.
 
 ------------------------------------------------------------------------

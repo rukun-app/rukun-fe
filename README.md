@@ -57,8 +57,10 @@ Update terbaru 2 Oktober 2026:
 - halaman pengurus kini punya form pembuatan tagihan massal untuk wilayah/jenis
   tagihan tertentu, dengan opsi daftar rumah tangga tertentu atau seluruh keluarga
   pada wilayah yang dipilih;
+- halaman kas pengurus kini aktif dan membaca ledger billing dari endpoint backend
+  untuk ringkasan pemasukan, pengeluaran, dan saldo bersih;
 - layout halaman tagihan disamakan dengan page-container umum;
-- ikon bottom navigation Tagihan sudah muncul kembali;
+- ikon bottom navigation Tagihan sudah muncul kembali serta item Kas tampil di sidebar pengurus;
 - label UI menggunakan helper i18n sesuai konvensi proyek.
 
 Gate isolasi scope dan pencabutan akses pada backend nyata masih perlu diverifikasi.

@@ -231,7 +231,12 @@ const routes: RouteRecordRaw[] = [
         component: Placeholder,
         meta: { title: 'Verifikasi Pembayaran' },
       },
-      { path: 'cashbook', name: 'manage.cashbook', component: Placeholder, meta: { title: 'Kas' } },
+      {
+        path: 'cashbook',
+        name: 'manage.cashbook',
+        component: () => import('@/features/billing/CashbookPage.vue'),
+        meta: { title: 'Kas', requiredCapabilities: ['billing.manage'] },
+      },
       { path: 'wifi', name: 'manage.wifi', component: Placeholder, meta: { title: 'WiFi' } },
       { path: 'patrol', name: 'manage.patrol', component: Placeholder, meta: { title: 'Ronda' } },
       {
