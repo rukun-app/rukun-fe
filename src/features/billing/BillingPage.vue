@@ -14,6 +14,9 @@ import {
   useBillingListPaymentType,
   useBillingListSubmission,
   useBillingShowInvoice,
+  useBillingSubmissionApprove,
+  useBillingSubmissionCancel,
+  useBillingSubmissionReject,
   useBillingSubmitTransfer,
   useListAreas,
   useUploadFile,
@@ -56,6 +59,9 @@ const paymentTypeQuery = useBillingListPaymentType(computed(() => ({ per_page: 5
 const uploadFileMutation = useUploadFile()
 const submitTransferMutation = useBillingSubmitTransfer()
 const generateInvoicesMutation = useBillingGenerateInvoices()
+const approveSubmissionMutation = useBillingSubmissionApprove()
+const rejectSubmissionMutation = useBillingSubmissionReject()
+const cancelSubmissionMutation = useBillingSubmissionCancel()
 const invoiceDetailQuery = useBillingShowInvoice(selectedInvoiceId, {
   query: { enabled: computed(() => !!selectedInvoiceId.value) },
 })
@@ -253,6 +259,41 @@ async function generateInvoices() {
     settleBy: '',
     state: 'draft',
   }
+  await Promise.all([invoiceQuery.refetch(), submissionQuery.refetch()])
+  await queryClient.invalidateQueries({ queryKey: ['api', 'billing'] })
+}
+
+async function approveSubmission(submissionId: string) {
+  if (!submissionId) return
+
+  await approveSubmissionMutation.mutateAsync({
+    submission: submissionId,
+    data: { paid_on: new Date().toISOString() },
+  })
+
+  await Promise.all([invoiceQuery.refetch(), submissionQuery.refetch()])
+  await queryClient.invalidateQueries({ queryKey: ['api', 'billing'] })
+}
+
+async function rejectSubmission(submissionId: string) {
+  if (!submissionId) return
+
+  await rejectSubmissionMutation.mutateAsync({
+    submission: submissionId,
+    data: {
+      review_note: tr('Transfer ditolak oleh pengurus.'),
+    },
+  })
+
+  await Promise.all([invoiceQuery.refetch(), submissionQuery.refetch()])
+  await queryClient.invalidateQueries({ queryKey: ['api', 'billing'] })
+}
+
+async function cancelSubmission(submissionId: string) {
+  if (!submissionId) return
+
+  await cancelSubmissionMutation.mutateAsync({ submission: submissionId })
+
   await Promise.all([invoiceQuery.refetch(), submissionQuery.refetch()])
   await queryClient.invalidateQueries({ queryKey: ['api', 'billing'] })
 }
@@ -677,6 +718,36 @@ async function generateInvoices() {
       <Column field="status" :header="tr('Status')" sortable>
         <template #body="{ data }">
           <StatusBadge :status="submissionMeta(data).status" :label="tr(submissionMeta(data).label)" />
+        </template>
+      </Column>
+      <Column :header="tr('Aksi')" :style="{ width: '14rem' }">
+        <template #body="{ data }">
+          <div class="flex flex-wrap gap-2">
+            <Button
+              v-if="['pending', 'reviewing'].includes(data.status)"
+              :label="tr('Setujui')"
+              severity="success"
+              size="small"
+              :loading="approveSubmissionMutation.isPending.value"
+              @click="approveSubmission(data.public_id ?? data.id ?? '')"
+            />
+            <Button
+              v-if="['pending', 'reviewing'].includes(data.status)"
+              :label="tr('Tolak')"
+              severity="danger"
+              size="small"
+              :loading="rejectSubmissionMutation.isPending.value"
+              @click="rejectSubmission(data.public_id ?? data.id ?? '')"
+            />
+            <Button
+              v-if="['pending', 'reviewing'].includes(data.status)"
+              :label="tr('Batal')"
+              text
+              size="small"
+              :loading="cancelSubmissionMutation.isPending.value"
+              @click="cancelSubmission(data.public_id ?? data.id ?? '')"
+            />
+          </div>
         </template>
       </Column>
     </AppDataTable>
