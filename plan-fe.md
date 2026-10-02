@@ -1294,7 +1294,10 @@ manual. Jangan melanjutkan fitur/fase berikutnya sebelum instruksi pengguna.
 - [x] Beranda warga: household dan anggota dari context server (fixture; gate scope nyata pending).
 - [x] Profil/account, password mandiri, bahasa akun dan sesi perangkat.
 - [x] UI status, kirim ulang, dan pemeriksaan verifikasi email.
-- [ ] Integrasi email bertanda tangan nyata dan notification inbox.
+- [ ] Integrasi email bertanda tangan nyata.
+- [x] Inbox tahap 1: daftar/detail/read/unread/count/read-all.
+- [x] Preferensi kanal dan locked channels mengikuti server.
+- [ ] Deep-link context notifikasi.
 - [x] Mutasi membership dan riwayat (FE-3 tahap 2).
 - [ ] Import/export UI dan progress/result.
 - [ ] Scoped role assignment dan reveal/edit data sensitif.
@@ -1373,7 +1376,9 @@ ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
 - [x] FE-3: profil nama/bahasa, password mandiri, daftar/cabut sesi dan logout semua.
 - [x] FE-3: UI status/kirim ulang/periksa verifikasi email.
 - [ ] FE-3: pengiriman email dan signed verification backend nyata.
-- [ ] FE-3: inbox/unread/read state/preferences; endpoint sudah ada, UI belum.
+- [x] FE-3: inbox, unread count, detail, read/unread/read-all; DataTable + ID/EN/dark.
+- [x] FE-3: preferensi kanal notifikasi, locked channels, dirty guard, error/retry.
+- [ ] FE-3: hapus pesan, badge global, deep-link context dan integrasi backend nyata.
 - [ ] FE-3: import/export file, progress/poll/cancel, hasil/error/download.
 - [ ] FE-3: provisioning/link/recovery akun dan credential sekali pakai.
 - [ ] FE-3: scoped role assignment (global users.assign-roles), selector referensi.
@@ -1384,7 +1389,7 @@ ada di [docs/openapi-review-fe0-fe3.md](docs/openapi-review-fe0-fe3.md).
   error code context. Search/sort global/total belum didukung; tabel tetap lokal.
 - [ ] Pengumuman: belum ada endpoint, tetap menunggu kontrak backend.
 
-Prioritas tahap selanjutnya: gap context/integrasi email nyata → inbox →
+Prioritas tahap selanjutnya: gap context/integrasi email nyata → kelengkapan notifikasi →
 population transfer → administrasi Community/sensitive → gate integrasi akhir
 FE-3. Kerjakan satu tahap per penyerahan dengan instruksi pengguna; jangan
 menandai FE-2/FE-3 selesai hanya karena client endpoint sudah generated.
@@ -1821,3 +1826,36 @@ Penyerahan berhenti pada tahap ini; inbox dan FE-4 belum dimulai.
 
 Validasi tahap 3: **82/82 unit test (21 file), 84/84 E2E Chromium**, TypeScript,
 ESLint, Prettier dan production build lulus. Backend email nyata belum diuji.
+
+
+## Penyerahan inbox tahap 1 (2026-10-02)
+
+- [x] `/notifications` lintas akses dan redirect `/app/notifications`; menu akun bersama.
+- [x] PrimeVue DataTable: label terbaca, filter server, cursor, pencarian/sort lokal.
+- [x] Detail teks, read/unread, count, dan konfirmasi read-all seluruh akun.
+- [x] Query key akun/locale; adapter runtime untuk DTO notifikasi generik.
+- [x] Loading/empty/error/retry, ID/EN dan dark mobile.
+- [ ] Preferensi kanal dan locked channels, hapus pesan, badge global serta deep-link context.
+- [ ] Integrasi ownership backend nyata; fixture tidak menggantikan pengujian lintas akun.
+
+Checklist: [docs/notifications-stage.md](docs/notifications-stage.md).
+Berhenti pada tahap ini untuk pengujian pengguna. FE-4 belum dimulai.
+
+Validasi inbox tahap 1: **88/88 unit test (22 file), 95/95 E2E Chromium**,
+TypeScript, ESLint, Prettier, dan production build lulus. Tambahan tahap ini:
+6 unit test untuk adapter/filter dan 11 E2E untuk akses lintas context, pagination,
+read/unread/read-all, error/retry, rendering teks, dan mobile dark EN.
+
+
+## Penyerahan preferensi notifikasi tahap 2 (2026-10-02)
+
+- [x] `/notifications/preferences` lintas akses, ditautkan dari inbox.
+- [x] PrimeVue DataTable/ToggleSwitch; nilai efektif dan kanal wajib dari server.
+- [x] Adapter runtime DTO generik; payload whitelist hanya kategori berubah.
+- [x] Simpan/reset, dirty guard, loading/error/retry, ID/EN dan dark mode.
+- [x] Header/menu bersama `AccountWorkspace`, tanpa duplikasi inbox/preferensi.
+- [ ] Persistensi/delivery/ownership backend nyata.
+- [ ] Hapus pesan, badge global, deep-link context dan realtime.
+
+Checklist: [docs/notification-preferences-stage.md](docs/notification-preferences-stage.md).
+Penyerahan berhenti untuk testing pengguna; FE-4 belum dimulai.

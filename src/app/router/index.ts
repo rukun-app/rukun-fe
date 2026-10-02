@@ -74,6 +74,25 @@ const routes: RouteRecordRaw[] = [
     ],
   },
 
+  {
+    path: '/notifications',
+    component: () => import('@/app/layouts/AccountWorkspace.vue'),
+    meta: { requiresAuth: true, title: 'Notifikasi' },
+    children: [
+      {
+        path: '',
+        name: 'notifications',
+        component: () => import('@/features/notifications/NotificationsPage.vue'),
+      },
+      {
+        path: 'preferences',
+        name: 'notifications.preferences',
+        component: () => import('@/features/notifications/NotificationPreferencesPage.vue'),
+        meta: { title: 'Preferensi notifikasi' },
+      },
+    ],
+  },
+
   // Resident — ResidentShell
   {
     path: '/app',
@@ -124,8 +143,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'notifications',
         name: 'app.notifications',
-        component: Placeholder,
-        meta: { title: 'Notifikasi' },
+        redirect: '/notifications',
       },
     ],
   },

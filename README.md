@@ -52,7 +52,7 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
-bersama implementasi serta hasil unit test. **Penyerahan saat ini: account tahap 3 (status dan kirim ulang verifikasi email),
+bersama implementasi serta hasil unit test. **Penyerahan saat ini: preferensi notifikasi tahap 2,
 setelah tahap auth/bahasa dan FE-3 tahap 3. FE-3 belum selesai seluruhnya; FE-4 belum dimulai.**
 
 ## Checklist pengujian manual saat ini
@@ -81,7 +81,7 @@ akun atau password baru yang dibuat oleh pekerjaan frontend ini.
 10. Pada halaman lupa password, uji email. Pemulihan lewat SMS tidak tersedia;
     akun yang hanya memakai nomor HP diarahkan menghubungi pengurus.
 
-Yang **belum tersedia** pada tahap FE-3 ini: integrasi email nyata/inbox,
+Yang **belum tersedia** pada tahap FE-3 ini: integrasi email nyata/deep-link notifikasi,
 import/export UI, pengelolaan scoped assignment,
 reveal/edit NIK/KK. Menu finansial/layanan belum
 ditampilkan sebagai fitur siap pakai.
@@ -181,7 +181,7 @@ tersedia ketika request gagal.
 fitur tersedia, kekurangan UI, dan gate integrasi.
 
 Yang utama masih terbuka: transport/revocation context, integrasi email nyata,
-inbox, import/export,
+deep-link notifikasi, import/export,
 provisioning akun, assignment, serta sensitive reveal/edit. Context server dan
 beranda keluarga sudah tersedia; isolasi scope nyata belum dinyatakan lulus.
 FE-4 tetap belum dimulai.
@@ -214,15 +214,15 @@ Tindakan cabut sesi memakai konfirmasi dan menunggu respons sukses.
 
 [Checklist account tahap 1–2](docs/account-stage.md). Pengujian otomatis memakai
 fixture dan tidak mengubah profil/password atau mencabut token development nyata.
-UI verifikasi email tersedia pada tahap 3; integrasi email nyata, inbox dan gate scope tetap terbuka; FE-4 belum dimulai.
+UI verifikasi email tersedia pada tahap 3; integrasi email nyata, deep-link notifikasi dan gate scope tetap terbuka; FE-4 belum dimulai.
 
 ## Hasil verifikasi — 1 Oktober 2026
 
 | Pemeriksaan                                 | Hasil                                        |
 | ------------------------------------------- | -------------------------------------------- |
 | Install dari lockfile                       | Lulus (30 September)                         |
-| Unit test (Vitest 4, 21 file)               | **82/82 lulus**                              |
-| Browser E2E (Chromium)                      | **84/84 lulus**                              |
+| Unit test (Vitest 4, 22 file)               | **88/88 lulus**                              |
+| Browser E2E (Chromium)                      | **95/95 lulus**                              |
 | TypeScript source Vue dan konfigurasi Node  | Lulus                                        |
 | ESLint dan Prettier                         | Lulus                                        |
 | Production build + service worker           | Lulus                                        |
@@ -252,11 +252,11 @@ hapus, read-only, backend errors, retry detail/induk, unsaved guard, serta mobil
 Tambahan tahap auth/bahasa: parsing link, minimum/konfirmasi password, payload,
 sesi lama, error/reset sukses, header locale, dan persistensi pilihan. Unit suite
 lulus dengan `pnpm test --maxWorkers=2`; percobaan worker default sempat timeout
-saat proses paralel. Browser memakai build preview: **84/84 lulus**.
+saat proses paralel. Browser memakai build preview: **95/95 lulus**.
 
 Tambahan account tahap 1–2 mencakup validasi profil/password, prioritas bahasa,
 akses lintas context, guard dua form, DataTable sesi, cancel/konfirmasi, current/all
-logout, error/retry, dan mobile dark EN. Total setelah tahap 3: **82 unit / 84 E2E lulus**.
+logout, error/retry, dan mobile dark EN. Total setelah inbox tahap 1: **88 unit / 95 E2E lulus**.
 
 ## Peta kode
 
@@ -302,3 +302,30 @@ menuju backend; pengiriman email dan klik tautan nyata belum diuji otomatis.
 Validasi tahap 3: **82/82 unit test (21 file), 84/84 E2E Chromium**, typecheck,
 ESLint, Prettier, dan production build lulus. Delapan E2E baru mencakup status,
 kirim ulang, error/retry, perlindungan isian belum disimpan, dan mobile dark EN.
+
+## Inbox notifikasi tahap 1
+
+Buka **Menu akun → Notifikasi** atau `/notifications` (lintas jenis akses).
+`/app/notifications` kini mengarah ke inbox yang sama. Tersedia DataTable, filter
+kategori/status, cursor pagination, detail, jumlah belum dibaca, tandai
+dibaca/belum dibaca, serta konfirmasi tandai semua dibaca. ID/EN dan dark mode
+tersedia; isi pesan diterjemahkan backend.
+
+[Checklist inbox dan batas integrasi](docs/notifications-stage.md). Pengujian
+otomatis memakai fixture; notifikasi nyata tidak diubah. Preferensi kanal
+dilanjutkan pada tahap 2 di bawah. Hapus pesan, deep-link context, dan FE-4 belum
+dikerjakan.
+
+Validasi inbox tahap 1: **88/88 unit test (22 file), 95/95 E2E Chromium**,
+typecheck, ESLint, Prettier, dan production build lulus.
+
+## Preferensi notifikasi tahap 2
+
+Buka **Notifikasi → Preferensi notifikasi** (`/notifications/preferences`).
+Atur kanal Inbox aplikasi/Email melalui PrimeVue ToggleSwitch dan DataTable.
+Kanal wajib mengikuti server dan tidak bisa dimatikan. Simpan hanya mengirim
+kategori yang berubah; error mempertahankan pilihan, dan navigasi dengan edit
+belum tersimpan dilindungi konfirmasi. ID/EN serta dark mode tersedia.
+
+[Checklist preferensi dan batas integrasi](docs/notification-preferences-stage.md).
+Persistensi dan pengiriman notifikasi nyata belum diuji otomatis.
