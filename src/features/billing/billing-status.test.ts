@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getBillingStatusMeta, summarizeBillingInvoices } from './model'
+import { buildTransferSubmission, getBillingStatusMeta, summarizeBillingInvoices } from './model'
 
 describe('billing status metadata', () => {
   it('maps invoice states to usable badge metadata', () => {
@@ -43,6 +43,28 @@ describe('billing status metadata', () => {
       totalDue: 1,
       totalInvoices: 3,
       unpaidInvoices: 2,
+    })
+  })
+
+  it('builds a manual transfer submission payload for a selected invoice', () => {
+    expect(
+      buildTransferSubmission({
+        amount: 150000,
+        invoiceId: 'invoice-123',
+        householdId: 'household-456',
+        destinationAccountId: 'bank-789',
+        proofFileId: 'file-xyz',
+        transferredAt: '2026-10-02T09:30:00.000Z',
+        note: 'Transfer via BCA',
+      }),
+    ).toEqual({
+      household_id: 'household-456',
+      amount: 150000,
+      transferred_at: '2026-10-02T09:30:00.000Z',
+      destination_account_id: 'bank-789',
+      proof_file_id: 'file-xyz',
+      note: 'Transfer via BCA',
+      allocations: [{ invoice_id: 'invoice-123', amount: 150000 }],
     })
   })
 })

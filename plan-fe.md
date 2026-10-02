@@ -24,10 +24,11 @@ Pekerjaan yang sudah masuk pada FE-4 foundation:
 - summary outstanding, due, dan invoice aktif; status badge menggunakan metadata
   domain yang konsisten;
 - detail invoice tampil dengan layout yang mengikuti page-container aplikasi;
-- bottom navigation Tagihan memakai ikon yang valid dan label memakai i18n.
+- bottom navigation Tagihan memakai ikon yang valid dan label memakai i18n;
+- form transfer manual aktif: menyiapkan payload dengan rekening tujuan, nominal,
+  tanggal transfer, upload bukti, dan catatan sesuai kontrak backend.
 
 Pekerjaan FE-4 yang masih tertunda:
-- alur submit transfer manual dan upload bukti pembayaran;
 - review/approval queue untuk submission manual;
 - detail receipt dan review ledger/cashbook;
 - integrasi full flow sesuai hasil real backend di deployment nyata.

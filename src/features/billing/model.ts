@@ -5,6 +5,36 @@ export type BillingInvoiceLike = {
   status?: string | null
 }
 
+export type BillingTransferSubmissionInput = {
+  amount: number
+  invoiceId: string
+  householdId: string
+  destinationAccountId: string
+  proofFileId: string
+  transferredAt: string
+  note?: string | null
+}
+
+export function buildTransferSubmission({
+  amount,
+  invoiceId,
+  householdId,
+  destinationAccountId,
+  proofFileId,
+  transferredAt,
+  note,
+}: BillingTransferSubmissionInput) {
+  return {
+    household_id: householdId,
+    amount,
+    transferred_at: transferredAt,
+    destination_account_id: destinationAccountId,
+    proof_file_id: proofFileId,
+    note: note?.trim() ? note.trim() : undefined,
+    allocations: [{ invoice_id: invoiceId, amount }],
+  }
+}
+
 export function summarizeBillingInvoices(invoices: BillingInvoiceLike[]) {
   const totalOutstanding = invoices.reduce((sum, invoice) => {
     const amount = Number(invoice.outstanding_amount ?? 0)
