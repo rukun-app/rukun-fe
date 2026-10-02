@@ -14,19 +14,23 @@
 
 > Update 2 Oktober 2026: FE-4 foundation billing sedang berjalan di frontend.
 > Fokus saat ini adalah menyatukan contract backend billing dengan shell UI yang
-> sudah ada: ringkasan tagihan, daftar invoice, detail invoice, serta koreksi
-> layout dan navigasi agar konsisten dengan halaman lain.
+> sudah ada: ringkasan tagihan, daftar invoice, detail invoice, form generate
+> tagihan area/jenis, serta koreksi layout dan navigasi agar konsisten dengan
+> halaman lain.
 
 Pekerjaan yang sudah masuk pada FE-4 foundation:
 - route `app.billing` dan `manage.billing` aktif ke page yang valid;
-- query ke `billingListInvoice`, `billingListSubmission`, dan `billingShowInvoice`
-  dipakai pada page;
+- query ke `billingListInvoice`, `billingListSubmission`, `billingShowInvoice`,
+  `billingListPaymentType`, dan `listAreas` dipakai pada page;
 - summary outstanding, due, dan invoice aktif; status badge menggunakan metadata
   domain yang konsisten;
 - detail invoice tampil dengan layout yang mengikuti page-container aplikasi;
 - bottom navigation Tagihan memakai ikon yang valid dan label memakai i18n;
 - form transfer manual aktif: menyiapkan payload dengan rekening tujuan, nominal,
-  tanggal transfer, upload bukti, dan catatan sesuai kontrak backend.
+  tanggal transfer, upload bukti, dan catatan sesuai kontrak backend;
+- form generate tagihan untuk pengurus aktif dengan pemilihan wilayah, jenis
+  tagihan, periode, due date, subject, dan household target sesuai kontrak
+  `billingGenerateInvoices`.
 
 Pekerjaan FE-4 yang masih tertunda:
 - review/approval queue untuk submission manual;

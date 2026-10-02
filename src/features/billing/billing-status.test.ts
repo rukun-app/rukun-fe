@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildTransferSubmission, getBillingStatusMeta, summarizeBillingInvoices } from './model'
+import {
+  buildInvoiceGenerationPayload,
+  buildTransferSubmission,
+  getBillingStatusMeta,
+  summarizeBillingInvoices,
+} from './model'
 
 describe('billing status metadata', () => {
   it('maps invoice states to usable badge metadata', () => {
@@ -65,6 +70,30 @@ describe('billing status metadata', () => {
       proof_file_id: 'file-xyz',
       note: 'Transfer via BCA',
       allocations: [{ invoice_id: 'invoice-123', amount: 150000 }],
+    })
+  })
+
+  it('builds a bulk invoice generation payload for the management flow', () => {
+    expect(
+      buildInvoiceGenerationPayload({
+        areaId: 'area-1',
+        paymentTypeId: 'type-2',
+        period: '2026-10',
+        dueDate: '2026-10-15',
+        subject: ' Iuran Oktober  ',
+        householdIds: ['household-10', 'household-11'],
+        settleBy: '2026-10-31',
+        state: 'draft',
+      }),
+    ).toEqual({
+      area_id: 'area-1',
+      payment_type_id: 'type-2',
+      household_ids: ['household-10', 'household-11'],
+      period: '2026-10',
+      subject: 'Iuran Oktober',
+      due_date: '2026-10-15',
+      settle_by: '2026-10-31',
+      state: 'draft',
     })
   })
 })

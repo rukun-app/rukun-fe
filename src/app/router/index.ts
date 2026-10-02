@@ -223,7 +223,7 @@ const routes: RouteRecordRaw[] = [
         path: 'billing',
         name: 'manage.billing',
         component: () => import('@/features/billing/BillingPage.vue'),
-        meta: { title: 'Tagihan' },
+        meta: { title: 'Tagihan', requiredCapabilities: ['billing.manage'] },
       },
       {
         path: 'payments',

@@ -54,6 +54,9 @@ Update terbaru 2 Oktober 2026:
 - detail invoice bisa dibuka dari daftar dengan tombol detail;
 - form transfer manual untuk tagihan aktif siap dipakai: pilih rekening tujuan,
   upload bukti transfer, dan kirim payload sesuai kontrak backend;
+- halaman pengurus kini punya form pembuatan tagihan massal untuk wilayah/jenis
+  tagihan tertentu, dengan opsi daftar rumah tangga tertentu atau seluruh keluarga
+  pada wilayah yang dipilih;
 - layout halaman tagihan disamakan dengan page-container umum;
 - ikon bottom navigation Tagihan sudah muncul kembali;
 - label UI menggunakan helper i18n sesuai konvensi proyek.
@@ -68,8 +71,9 @@ Detail temuan, batas pengujian, dan gate tiap fase ada di
 Setelah satu fase/tahap diserahkan, pengembangan berhenti agar Anda dapat menguji.
 Fase berikutnya dilanjutkan setelah instruksi Anda. Plan dan README diperbarui
 bersama implementasi serta hasil unit test. **Penyerahan saat ini: FE-4 foundation billing
-sudah aktif untuk daftar, detail invoice, dan form transfer manual dengan upload
-bukti pembayaran; remaining FE-4 masih di arah approval queue dan ledger/receipt review.**
+sudah aktif untuk daftar, detail invoice, form transfer manual dengan upload
+bukti pembayaran, dan form generate tagihan massal untuk pengurus; remaining FE-4
+masih di arah approval queue dan ledger/receipt review.**
 
 ## Checklist pengujian manual saat ini
 

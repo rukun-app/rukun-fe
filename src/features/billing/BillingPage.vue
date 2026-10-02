@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
 import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import {
+  listHouseholds,
+  useBillingGenerateInvoices,
   useBillingListBankAccount,
   useBillingListInvoice,
+  useBillingListPaymentType,
   useBillingListSubmission,
   useBillingShowInvoice,
   useBillingSubmitTransfer,
+  useListAreas,
   useUploadFile,
 } from '@/api/generated/endpoints'
 import { normalizeApiError } from '@/api/errors/normalizer'
@@ -19,7 +24,7 @@ import { useContextStore } from '@/contexts/stores/context'
 import { AppDataTable, AppSkeleton, ErrorState, MoneyDisplay, MutationErrors, PageHeader, StatusBadge } from '@/design-system'
 import { tr } from '@/i18n'
 import { formatDateTime } from '@/shared/utils/dateTime'
-import { buildTransferSubmission, getBillingStatusMeta, summarizeBillingInvoices } from './model'
+import { buildInvoiceGenerationPayload, buildTransferSubmission, getBillingStatusMeta, summarizeBillingInvoices } from './model'
 
 const route = useRoute()
 const context = useContextStore()
@@ -27,6 +32,17 @@ const invoiceCursor = ref<string>()
 const submissionCursor = ref<string>()
 const selectedInvoiceId = computed(() => (route.params.id ? String(route.params.id) : ''))
 const listRoute = computed(() => (route.path.startsWith('/manage/') ? '/manage/billing' : '/app/billing'))
+const isManagementRoute = computed(() => route.path.startsWith('/manage/'))
+const invoiceForm = ref({
+  areaId: '',
+  paymentTypeId: '',
+  householdIds: [] as string[],
+  period: '',
+  dueDate: '',
+  subject: '',
+  settleBy: '',
+  state: 'draft' as 'draft' | 'issued',
+})
 
 const invoiceQuery = useBillingListInvoice(
   computed(() => ({ per_page: 20, cursor: invoiceCursor.value })),
@@ -34,11 +50,25 @@ const invoiceQuery = useBillingListInvoice(
 const submissionQuery = useBillingListSubmission(
   computed(() => ({ per_page: 20, cursor: submissionCursor.value })),
 )
-const bankAccountQuery = useBillingListBankAccount(computed(() => ({ per_page: 50 })) )
+const bankAccountQuery = useBillingListBankAccount(computed(() => ({ per_page: 50 })))
+const areaQuery = useListAreas(computed(() => ({ per_page: 50 })))
+const paymentTypeQuery = useBillingListPaymentType(computed(() => ({ per_page: 50 })))
 const uploadFileMutation = useUploadFile()
 const submitTransferMutation = useBillingSubmitTransfer()
+const generateInvoicesMutation = useBillingGenerateInvoices()
 const invoiceDetailQuery = useBillingShowInvoice(selectedInvoiceId, {
   query: { enabled: computed(() => !!selectedInvoiceId.value) },
+})
+
+const householdQuery = useQuery({
+  queryKey: computed(() => ['billing', 'households', invoiceForm.value.areaId]),
+  enabled: computed(() => isManagementRoute.value && !!invoiceForm.value.areaId && context.can('households.view')),
+  queryFn: ({ signal }) =>
+    listHouseholds(
+      { per_page: 100, area_id: invoiceForm.value.areaId || undefined },
+      undefined,
+      signal,
+    ),
 })
 
 const transferForm = ref({
@@ -62,10 +92,31 @@ const summary = computed(() => summarizeBillingInvoices(invoices.value))
 const submitTransferError = computed(() =>
   submitTransferMutation.error.value ? normalizeApiError(submitTransferMutation.error.value) : null,
 )
+const generateInvoiceError = computed(() =>
+  generateInvoicesMutation.error.value ? normalizeApiError(generateInvoicesMutation.error.value) : null,
+)
 const invoiceOptions = computed(() =>
   invoices.value.map((invoice) => ({
     value: invoice.public_id ?? '',
     label: `${invoice.subject ?? tr('Tagihan')} · ${invoice.period ?? ''}`,
+  })),
+)
+const areaOptions = computed(() =>
+  (areaQuery.data.value?.data?.data ?? []).map((area) => ({
+    value: area.public_id ?? '',
+    label: area.name ?? tr('Wilayah'),
+  })),
+)
+const paymentTypeOptions = computed(() =>
+  (paymentTypeQuery.data.value?.data?.data ?? []).map((type) => ({
+    value: type.public_id ?? '',
+    label: type.name ?? type.code ?? tr('Jenis tagihan'),
+  })),
+)
+const householdOptions = computed(() =>
+  (householdQuery.data.value?.data?.data ?? []).map((household) => ({
+    value: household.public_id ?? '',
+    label: household.address || household.reference || tr('Keluarga'),
   })),
 )
 const bankAccountOptions = computed(() =>
@@ -80,6 +131,9 @@ const canReviewSubmissions = computed(
 )
 const canSubmitTransfer = computed(
   () => !!householdId.value && (context.can('payments.submit') || context.can('billing.manage')),
+)
+const canGenerateInvoices = computed(
+  () => isManagementRoute.value && (context.can('billing.manage') || context.can('areas.view')),
 )
 
 watch(
@@ -103,6 +157,13 @@ watch(
     if (!transferForm.value.amount || Number(transferForm.value.amount) <= 0) {
       transferForm.value.amount = String(selected.outstanding_amount ?? 0)
     }
+  },
+)
+
+watch(
+  () => invoiceForm.value.areaId,
+  () => {
+    invoiceForm.value.householdIds = []
   },
 )
 
@@ -162,6 +223,37 @@ async function submitTransfer() {
   await submitTransferMutation.mutateAsync({ data: payload })
   resetTransferForm()
   await Promise.all([invoiceQuery.refetch(), submissionQuery.refetch(), bankAccountQuery.refetch()])
+  await queryClient.invalidateQueries({ queryKey: ['api', 'billing'] })
+}
+
+async function generateInvoices() {
+  if (!canGenerateInvoices.value || !invoiceForm.value.areaId || !invoiceForm.value.paymentTypeId || !invoiceForm.value.period || !invoiceForm.value.dueDate) {
+    return
+  }
+
+  const payload = buildInvoiceGenerationPayload({
+    areaId: invoiceForm.value.areaId,
+    paymentTypeId: invoiceForm.value.paymentTypeId,
+    period: invoiceForm.value.period,
+    dueDate: invoiceForm.value.dueDate,
+    subject: invoiceForm.value.subject,
+    householdIds: invoiceForm.value.householdIds,
+    settleBy: invoiceForm.value.settleBy,
+    state: invoiceForm.value.state,
+  })
+
+  await generateInvoicesMutation.mutateAsync({ data: payload })
+  invoiceForm.value = {
+    areaId: '',
+    paymentTypeId: '',
+    householdIds: [],
+    period: '',
+    dueDate: '',
+    subject: '',
+    settleBy: '',
+    state: 'draft',
+  }
+  await Promise.all([invoiceQuery.refetch(), submissionQuery.refetch()])
   await queryClient.invalidateQueries({ queryKey: ['api', 'billing'] })
 }
 </script>
@@ -263,6 +355,134 @@ async function submitTransfer() {
             {{ tr('Status invoice mengikuti kontrak backend dan akan diperbarui setelah review transfer atau penerimaan pembayaran.') }}
           </p>
         </div>
+      </div>
+    </section>
+
+    <section v-if="canGenerateInvoices" class="rounded-2xl border border-surface-200 bg-surface-0 p-5 dark:border-surface-700 dark:bg-surface-900">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p class="text-sm uppercase tracking-[0.12em] text-surface-500">{{ tr('Pengelolaan') }}</p>
+          <h2 class="mt-1 text-xl font-semibold">{{ tr('Buat tagihan') }}</h2>
+        </div>
+      </div>
+
+      <MutationErrors :error="generateInvoiceError" />
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-surface-700 dark:text-surface-300" for="invoice-area">
+            {{ tr('Wilayah') }}
+          </label>
+          <Select
+            id="invoice-area"
+            v-model="invoiceForm.areaId"
+            :options="areaOptions"
+            option-label="label"
+            option-value="value"
+            :placeholder="tr('Pilih wilayah')"
+            class="w-full"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-surface-700 dark:text-surface-300" for="invoice-type">
+            {{ tr('Jenis tagihan') }}
+          </label>
+          <Select
+            id="invoice-type"
+            v-model="invoiceForm.paymentTypeId"
+            :options="paymentTypeOptions"
+            option-label="label"
+            option-value="value"
+            :placeholder="tr('Pilih jenis tagihan')"
+            class="w-full"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-surface-700 dark:text-surface-300" for="invoice-period">
+            {{ tr('Periode') }}
+          </label>
+          <input
+            id="invoice-period"
+            v-model="invoiceForm.period"
+            type="month"
+            class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm text-surface-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:border-surface-600 dark:bg-surface-950 dark:text-surface-100"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-surface-700 dark:text-surface-300" for="invoice-due-date">
+            {{ tr('Jatuh tempo') }}
+          </label>
+          <input
+            id="invoice-due-date"
+            v-model="invoiceForm.dueDate"
+            type="date"
+            class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm text-surface-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:border-surface-600 dark:bg-surface-950 dark:text-surface-100"
+          />
+        </div>
+
+        <div class="space-y-2 md:col-span-2">
+          <label class="text-sm font-medium text-surface-700 dark:text-surface-300" for="invoice-subject">
+            {{ tr('Subjek') }}
+          </label>
+          <input
+            id="invoice-subject"
+            v-model="invoiceForm.subject"
+            :placeholder="tr('Misalnya: Iuran Oktober')"
+            class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm text-surface-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:border-surface-600 dark:bg-surface-950 dark:text-surface-100"
+          />
+        </div>
+
+        <div class="space-y-2 md:col-span-2">
+          <label class="text-sm font-medium text-surface-700 dark:text-surface-300" for="invoice-households">
+            {{ tr('Rumah tangga yang dibebankan') }}
+          </label>
+          <Select
+            id="invoice-households"
+            v-model="invoiceForm.householdIds"
+            :options="householdOptions"
+            option-label="label"
+            option-value="value"
+            :placeholder="tr('Pilih rumah tangga atau biarkan kosong untuk semua keluarga')"
+            :multiple="true"
+            class="w-full"
+            :disabled="!invoiceForm.areaId"
+          />
+        </div>
+
+        <div class="space-y-2 md:col-span-2">
+          <label class="text-sm font-medium text-surface-700 dark:text-surface-300" for="invoice-settle-by">
+            {{ tr('Batas penyelesaian') }}
+          </label>
+          <input
+            id="invoice-settle-by"
+            v-model="invoiceForm.settleBy"
+            type="date"
+            class="w-full rounded-lg border border-surface-300 bg-surface-0 px-3 py-2 text-sm text-surface-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:border-surface-600 dark:bg-surface-950 dark:text-surface-100"
+          />
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center justify-between gap-3">
+        <Select
+          v-model="invoiceForm.state"
+          :options="[
+            { label: tr('Draft'), value: 'draft' },
+            { label: tr('Diterbitkan'), value: 'issued' },
+          ]"
+          option-label="label"
+          option-value="value"
+          class="w-40"
+        />
+        <Button
+          :label="tr('Generate tagihan')"
+          icon="pi pi-plus"
+          :loading="generateInvoicesMutation.isPending.value"
+          :disabled="!invoiceForm.areaId || !invoiceForm.paymentTypeId || !invoiceForm.period || !invoiceForm.dueDate"
+          @click="generateInvoices"
+        />
       </div>
     </section>
 
